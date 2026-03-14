@@ -28,6 +28,10 @@ fn do_work(req: &IpcRequest) -> IpcResponse {
 
         IpcRequest::GetChargeLimit => handlers::get_charge_limit(ec),
 
+        IpcRequest::GetPowerProfile => handlers::get_power_profile(ec),
+
+        IpcRequest::GetKeyboardBacklight => handlers::get_keyboard_backlight(ec),
+
         // SETTERS:
         IpcRequest::SetPowerProfile(profile) => handlers::set_power_profile(ec, profile),
 

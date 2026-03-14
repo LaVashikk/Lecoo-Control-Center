@@ -1,17 +1,20 @@
 use ipc::{ChargeLimit, IpcResponse};
-use anyhow::{Ok, Result, bail};
+use anyhow::{Ok, Result};
 use crate::EcDevice;
 
 const RAM_BAT_LIMIT_MIN: u16 = 0xBC;
 const RAM_BAT_LIMIT_MAX: u16 = 0xBB;
 
-
-pub fn get_charge_limit(ec: &EcDevice) -> Result<IpcResponse> {
-    let min = ec.read_ram(RAM_BAT_LIMIT_MIN)?;
-    let max = ec.read_ram(RAM_BAT_LIMIT_MAX)?;
-    Ok(IpcResponse::ChargeLimit(min, max))
+fn read_charge_limit(ec: &EcDevice) -> Result<(u8, u8)> {
+    let min = ec.read_ram(RAM_BAT_LIMIT_MIN)? as u8;
+    let max = ec.read_ram(RAM_BAT_LIMIT_MAX)? as u8;
+    Ok((min, max))
 }
 
+pub fn get_charge_limit(ec: &EcDevice) -> Result<IpcResponse> {
+    let (min, max) = read_charge_limit(ec)?;
+    Ok(IpcResponse::ChargeLimit(min, max))
+}
 
 pub fn set_charge_limit(ec: &EcDevice, limit: &ChargeLimit) -> Result<IpcResponse> {
     let (min, max) = match limit {

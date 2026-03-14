@@ -27,6 +27,12 @@ pub enum IpcRequest {
     /// Get the current battery charge limit
     GetChargeLimit,
 
+    /// Get the current power profile
+    GetPowerProfile,
+
+    /// Get the current keyboard backlight brightness
+    GetKeyboardBacklight,
+
     /// Apply a new power profile (Silent/Default/Performance)
     SetPowerProfile(PowerProfile),
 
@@ -63,6 +69,12 @@ pub enum IpcResponse {
 
     /// Current battery charge limit (min/max percentages)
     ChargeLimit(u8, u8),
+
+    /// Current keyboard backlight brightness
+    KeyboardBacklight(u8),
+
+    /// Current power profile
+    PowerLimit(PowerProfile),
 
     /// Error message if something went wrong
     Error(String),
