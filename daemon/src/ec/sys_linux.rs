@@ -11,7 +11,7 @@ impl RawPortIo {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
-            .open("/dev/port")
+            .open("/dev/port")      // todo: Race condition with ACPI/OS itself. ec_sys can be a better solution!
             .context("Failed to open /dev/port. Are you root?")?;
         Ok(Self { file })
     }

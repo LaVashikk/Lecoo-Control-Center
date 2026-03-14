@@ -39,7 +39,7 @@ impl IpcServer {
     }
 
     /// Iterator over incoming connections
-    pub fn accept(&mut self) -> io::Result<IpcConnection> {
+    pub fn accept(&mut self) -> io::Result<IpcConnection> { // todo: fix failed to fill whole buffer for outdated versions
         let stream = self.listener.accept()?;
         Ok(IpcConnection { stream })
     }

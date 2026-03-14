@@ -8,6 +8,17 @@ pub enum PowerProfile {
     Performance = 0x03,
 }
 
+impl std::fmt::Display for PowerProfile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            PowerProfile::Silent => "Silent",
+            PowerProfile::Default => "Default",
+            PowerProfile::Performance => "Performance",
+        };
+        write!(f, "{}", name)
+    }
+}
+
 /// Represents the keyboard backlight brightness levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub enum KeyboardBacklightLevel {
