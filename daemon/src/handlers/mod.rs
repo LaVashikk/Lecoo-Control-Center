@@ -46,6 +46,6 @@ pub fn set_fan_mode(ec: &EcDevice, fan: &FanIndex, mode: &FanMode) -> Result<Ipc
 }
 
 pub fn set_keyboard_backlight(ec: &EcDevice, level: &KeyboardBacklightLevel) -> Result<IpcResponse> {
-    ec.write_reg(0x0F05, *level as u8)?;
+    ec.write_reg(0xCF05, *level as u8)?;
     Ok(IpcResponse::Success)
 }
