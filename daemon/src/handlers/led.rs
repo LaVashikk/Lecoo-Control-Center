@@ -62,6 +62,7 @@ pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
                 ec.write_reg(REG_GPIO_A0_MUX, 0x00)?;
                 IS_LED_ALREADY_CUSTOM.store(true, Ordering::Relaxed);
             }
+            reset_pwm_hardware_to_default(ec)?;
             ec.write_reg(REG_LED_BREATH_EN, 0x00)?;
 
             // Setting up hard blinking using frequency dividers
@@ -77,6 +78,7 @@ pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
                 ec.write_reg(REG_GPIO_A0_MUX, 0x00)?;
                 IS_LED_ALREADY_CUSTOM.store(true, Ordering::Relaxed);
             }
+            reset_pwm_hardware_to_default(ec)?;
 
             // Returning the base PWM frequency to normal for a smooth dimmer
             ec.write_reg(REG_PWM_PRESCALER, 0x00)?;
