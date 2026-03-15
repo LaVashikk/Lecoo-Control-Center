@@ -12,7 +12,7 @@ mod sys_windows;
 pub use sys_windows::RawPortIo;
 
 
-const EC_BASE: u16 = 0xC400; // todo
+pub static mut EC_BASE: u16 = 0x00; // Offset for HRAM Window
 
 /// Platform-independent Embedded Controller hardware interface
 pub struct EcDevice {
@@ -36,6 +36,20 @@ impl EcDevice {
         };
 
         device.detect()?;
+        let possible_bases: [u16; 5] = [0xC400, 0xC000, 0x0400, 0x0000, 0xE000];
+        for &base in &possible_bases {
+            if let Ok(temp) = device.read_reg(base + super::handlers::RAM_TEMP_CPU) {
+                if temp > 0x10 && temp < 0x50 {
+                    unsafe { EC_BASE = base }
+                    println!("-----------\nHRAM Window detected by offset: {:#06X}. Temp: {}", base, temp);
+                }
+            }
+        }
+
+        if unsafe { EC_BASE } == 0 {
+            bail!("Failed to detect HRAM window base address");
+        }
+
         Ok(device)
     }
 
@@ -126,10 +140,10 @@ impl EcDevice {
     // --- Hardware-Specific Helpers (Shared Memory Space) ---
 
     pub fn read_ram(&self, offset: u16) -> Result<u8> {
-        self.read_reg(EC_BASE + offset)
+        self.read_reg(unsafe { EC_BASE } + offset)
     }
 
     pub fn write_ram(&self, offset: u16, val: u8) -> Result<()> {
-        self.write_reg(EC_BASE + offset, val)
+        self.write_reg(unsafe { EC_BASE } + offset, val)
     }
 }
