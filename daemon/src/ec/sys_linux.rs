@@ -1,6 +1,6 @@
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::FileExt;
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 
 pub struct RawPortIo {
     file: File,

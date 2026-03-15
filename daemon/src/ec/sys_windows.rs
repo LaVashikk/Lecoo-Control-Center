@@ -10,6 +10,7 @@ type Inp32Fn = unsafe extern "system" fn(port: i32) -> u8;
 
 pub struct RawPortIo {
     _lib: Library,
+    #[allow(unused)]
     is_open: IsDriverOpenFn,
     out32: Out32Fn,
     inp32: Inp32Fn,

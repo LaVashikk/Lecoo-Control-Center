@@ -6,8 +6,8 @@ const REG_CHIP_ID1: u16 = 0x2000;
 const REG_CHIP_ID2: u16 = 0x2001;
 const REG_CHIP_VER: u16 = 0x2002;
 
-const RAM_TEMP_CPU: u16 = 0x70;
-const RAM_TEMP_SYS: u16 = 0x93;
+pub const RAM_TEMP_CPU: u16 = 0x70;
+const RAM_TEMP_SYS: u16 = 0x62; // todo: OR 93? no clue
 
 const RAM_FAN_CPU_MSB: u16 = 0x76;
 const RAM_FAN_CPU_LSB: u16 = 0x77;
