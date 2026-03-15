@@ -5,7 +5,15 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0"
+log = "0.4"
 ipc = { path = "../ipc" }
 
 [target.'cfg(windows)'.dependencies]
+simplelog = "0.11"
 libloading = "0.9.0"
+windows-service = "0.8"
+file-rotate = "0.8"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = "5"
+systemd-journal-logger = "2.1.1"
