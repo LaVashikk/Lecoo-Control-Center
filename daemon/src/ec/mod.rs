@@ -11,6 +11,8 @@ mod sys_windows;
 #[cfg(target_os = "windows")]
 pub use sys_windows::RawPortIo;
 
+mod hw;
+pub use hw::*;
 
 /// Platform-independent Embedded Controller hardware interface
 pub struct EcDevice {
@@ -38,7 +40,7 @@ impl EcDevice {
         device.detect()?;
         let possible_bases: [u16; 5] = [0xC400, 0xC000, 0x0400, 0x0000, 0xE000];
         for &base in &possible_bases {
-            if let Ok(temp) = device.read_reg(base + super::handlers::RAM_TEMP_CPU) {
+            if let Ok(temp) = device.read_reg(base + hw::RAM_TEMP_CPU) {
                 if temp > 0x10 && temp < 0x50 {
                     device.hram_offset = base;
                     println!("-----------\nHRAM Window detected by offset: {:#06X}. Temp: {}", base, temp);

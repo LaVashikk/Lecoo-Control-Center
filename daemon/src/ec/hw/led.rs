@@ -1,8 +1,8 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use ipc::{HardwareAnimation, IpcResponse, PowerLedMode};
+use ipc::{HardwareAnimation, PowerLedMode};
 use anyhow::Result;
-use crate::EcDevice;
+use super::EcDevice;
 
 /// EC state override (0x00 = Auto, 0x01 = Custom/Bypass)
 const RAM_LED_BYPASS: u16 = 0x55;
@@ -28,19 +28,19 @@ const REG_LED_BREATH_DELAY: u16 = 0x1852;
 
 static IS_LED_ALREADY_CUSTOM: AtomicBool = AtomicBool::new(false);
 
-fn reset_pwm_hardware_to_default(ec: &EcDevice) -> Result<()> {
-    ec.write_reg(REG_LED_BREATH_EN, 0x00)?; // Disable hardware breathing dimmer
-    ec.write_reg(REG_PWM_PRESCALER, 0x00)?; // Reset prescaler (maximum PWM frequency)
-    ec.write_reg(REG_PWM_CYCLE, 0xFF)?;     // Reset Cycle Time (standard 256 steps)
+pub fn reset_led_anim_engine(ec: &EcDevice) -> Result<()> {
+    ec.write_reg(REG_LED_BREATH_EN, 0x00)?;     // Disable hardware breathing dimmer
+    ec.write_reg(REG_PWM_PRESCALER, 0x00)?;     // Reset prescaler (maximum PWM frequency)
+    ec.write_reg(REG_PWM_CYCLE, 0xFF)?;         // Reset Cycle Time (standard 256 steps)
     Ok(())
 }
 
 
-pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
+pub fn apply_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<()> {
     match mode {
         PowerLedMode::Auto => {
             ec.write_ram(RAM_LED_BYPASS, 0x00)?;
-            reset_pwm_hardware_to_default(ec)?;
+            reset_led_anim_engine(ec)?;
             IS_LED_ALREADY_CUSTOM.store(false, Ordering::Relaxed);
         }
 
@@ -51,7 +51,7 @@ pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
                 ec.write_reg(REG_GPIO_A0_MUX, 0x00)?;           // Pin multiplexer in manual mode
                 IS_LED_ALREADY_CUSTOM.store(true, Ordering::Relaxed);
             }
-            reset_pwm_hardware_to_default(ec)?;                 // TODO HERE! call only if it hasn't been called already
+            reset_led_anim_engine(ec)?;                 // TODO HERE! call only if it hasn't been called already
             ec.write_reg(REG_PWM_DUTY, *brightness)?;           // PWM Duty Cycle Register (brightness)
         }
 
@@ -62,7 +62,7 @@ pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
                 ec.write_reg(REG_GPIO_A0_MUX, 0x00)?;
                 IS_LED_ALREADY_CUSTOM.store(true, Ordering::Relaxed);
             }
-            reset_pwm_hardware_to_default(ec)?;
+            reset_led_anim_engine(ec)?;
             ec.write_reg(REG_LED_BREATH_EN, 0x00)?;
 
             // Setting up hard blinking using frequency dividers
@@ -78,7 +78,7 @@ pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
                 ec.write_reg(REG_GPIO_A0_MUX, 0x00)?;
                 IS_LED_ALREADY_CUSTOM.store(true, Ordering::Relaxed);
             }
-            reset_pwm_hardware_to_default(ec)?;
+            reset_led_anim_engine(ec)?;
 
             // Returning the base PWM frequency to normal for a smooth dimmer
             ec.write_reg(REG_PWM_PRESCALER, 0x00)?;
@@ -102,5 +102,7 @@ pub fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
         }
     }
 
-    Ok(IpcResponse::Success)
+    Ok(())
 }
+
+// TODO: blinking: keyboard also start blinking!!! its a bug

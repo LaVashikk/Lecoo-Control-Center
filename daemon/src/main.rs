@@ -5,13 +5,12 @@ use log::info;
 use std::{sync::OnceLock, thread};
 use anyhow::Result;
 
-mod ec;
+pub mod ec;
 mod handlers;
 mod services;
 
-pub use ec::EcDevice;
+pub static EC: OnceLock<ec::EcDevice> = OnceLock::new();
 
-pub static EC: OnceLock<EcDevice> = OnceLock::new();
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
