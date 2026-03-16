@@ -5,7 +5,6 @@ edition = "2024"
 
 [dependencies]
 bincode = "2.0"
-serde = { version = "1.0", features = ["derive"] }
 interprocess = "2.4"
 
 [target.'cfg(windows)'.dependencies]

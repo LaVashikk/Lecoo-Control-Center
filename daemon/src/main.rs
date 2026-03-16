@@ -13,14 +13,12 @@ pub use ec::EcDevice;
 
 pub static EC: OnceLock<EcDevice> = OnceLock::new();
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn do_work(req: &IpcRequest) -> IpcResponse {
     let ec = EC.get().unwrap();
 
     let result = match req {
-
-        IpcRequest::Ping => Ok(IpcResponse::Success),
-        IpcRequest::Read(_offset) => todo!(), // Ok(IpcResponse::Message(format!("REG: {}", ec.read_reg(*offset).unwrap_or(0)))), // TODO: DEV STUFF!
-
         // GETTERS:
         IpcRequest::GetSystemState => handlers::get_system_state(ec),
 
@@ -63,16 +61,6 @@ fn main() -> Result<()> {
     let _ = EC.set(ec);
     let (tx_to_core, rx_in_core) = std::sync::mpsc::channel();
 
-    // println!("\nSystem info: {:?}", handlers::get_system_state(EC.get().unwrap()).unwrap());
-    // loop {
-    //     println!("{:?}", handlers::get_temperatures(EC.get().unwrap()).unwrap());
-    //     println!("{:?}", handlers::get_fans_rpm(EC.get().unwrap()).unwrap());
-    //     println!("-------");
-    //     thread::sleep(std::time::Duration::from_secs(5));
-    // }
-    // return Ok(());
-
-    // todo: logs
     // todo: restore last state
     // todo: add PrepareForSleep
     // todo: telemetry

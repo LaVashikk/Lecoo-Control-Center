@@ -18,8 +18,6 @@ pub const IPC_PROTOCOL_VERSION: [u8; 3] = [
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub enum IpcRequest {
-    Read(u16),
-
     /// Request the current telemetry and configuration state
     GetSystemState,
 

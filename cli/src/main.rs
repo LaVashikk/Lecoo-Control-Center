@@ -121,6 +121,7 @@ fn parse_charge_arg(s: &str) -> Result<ChargeLimit, String> {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    let mut client = IpcClient::connect().context("Failed to connect to daemon! Is it running?")?;
 
     let request = match cli.command {
         Commands::Info => IpcRequest::GetSystemState,
@@ -183,7 +184,6 @@ fn main() -> anyhow::Result<()> {
 
     // --------------
 
-    let mut client = IpcClient::connect().context("Failed to connect to daemon! Is it running?")?;
     let res: IpcResponse = client.request(&request)?;
 
     // Result handling

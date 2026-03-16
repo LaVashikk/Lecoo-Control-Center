@@ -6,7 +6,7 @@ use super::InternalEvent;
 pub fn init_logger() {
     systemd_journal_logger::JournalLog::new()
         .unwrap()
-        .with_extra_fields(vec![("VERSION", env!("CARGO_PKG_VERSION"))])
+        .with_extra_fields(vec![("VERSION", crate::VERSION)])
         .with_syslog_identifier("lecoo-daemon".to_string())
         .install().unwrap();
     log::set_max_level(log::LevelFilter::Info);
