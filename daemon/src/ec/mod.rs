@@ -12,8 +12,6 @@ mod sys_windows;
 pub use sys_windows::RawPortIo;
 
 
-pub static mut EC_BASE: u16 = 0x00; // Offset for HRAM Window
-
 /// Platform-independent Embedded Controller hardware interface
 pub struct EcDevice {
     /// Mutex wraps the low-level I/O backend.
@@ -22,6 +20,7 @@ pub struct EcDevice {
     io: Mutex<RawPortIo>,
     /// Detected Super I/O base port
     port: u16,
+    pub hram_offset: u16,
 }
 
 impl EcDevice {
@@ -33,6 +32,7 @@ impl EcDevice {
         let mut device = Self {
             io: Mutex::new(io),
             port: 0,
+            hram_offset: 0
         };
 
         device.detect()?;
@@ -40,13 +40,14 @@ impl EcDevice {
         for &base in &possible_bases {
             if let Ok(temp) = device.read_reg(base + super::handlers::RAM_TEMP_CPU) {
                 if temp > 0x10 && temp < 0x50 {
-                    unsafe { EC_BASE = base }
+                    device.hram_offset = base;
                     println!("-----------\nHRAM Window detected by offset: {:#06X}. Temp: {}", base, temp);
+                    break;
                 }
             }
         }
 
-        if unsafe { EC_BASE } == 0 {
+        if device.hram_offset == 0 {
             bail!("Failed to detect HRAM window base address");
         }
 
@@ -67,8 +68,8 @@ impl EcDevice {
                     return Ok(()); // Successfully found IT5570
                 }
                 if chip_id == 0x81 || chip_id == 0x85 || chip_id == 0x89 || chip_id == 0x90 {
-                    eprintln!("Warning: Found chip ID {:#X} at port {:#X}", chip_id, self.port);
-                    eprintln!("Note: This chip may not be fully supported");
+                    log::warn!("Warning: Found chip ID {:#X} at port {:#X}", chip_id, self.port);
+                    log::warn!("Note: This chip may not be fully supported");
                     return Ok(());
                 }
             }
@@ -140,10 +141,10 @@ impl EcDevice {
     // --- Hardware-Specific Helpers (Shared Memory Space) ---
 
     pub fn read_ram(&self, offset: u16) -> Result<u8> {
-        self.read_reg(unsafe { EC_BASE } + offset)
+        self.read_reg(self.hram_offset + offset)
     }
 
     pub fn write_ram(&self, offset: u16, val: u8) -> Result<()> {
-        self.write_reg(unsafe { EC_BASE } + offset, val)
+        self.write_reg(self.hram_offset + offset, val)
     }
 }

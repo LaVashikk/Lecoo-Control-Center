@@ -15,7 +15,7 @@ pub fn get_keyboard_backlight(ec: &EcDevice) -> Result<IpcResponse> {
 
 pub fn set_keyboard_backlight(ec: &EcDevice, level: &KeyboardBacklightLevel) -> Result<IpcResponse> {
     let mut addr = KEYBOARD_BACKLIGHT_REG;
-    if unsafe { crate::ec::EC_BASE } == 0xC400 {
+    if ec.hram_offset == 0xC400 {
         // WORKAROUND for EC base offset 0xC400
         addr += 0xC000
     }
