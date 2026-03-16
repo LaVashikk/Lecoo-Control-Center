@@ -266,7 +266,7 @@ impl BlinkConfig {
 
 
 /// Current configuration settings of the system
-#[derive(Debug, Clone, PartialEq, Eq)] // todo
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub struct CurrentSettings {
     /// Current power profile setting
     pub power_profile: PowerProfile,
@@ -280,4 +280,17 @@ pub struct CurrentSettings {
     pub charge_limit: ChargeLimit,
     /// Current power LED mode setting
     pub led_mode: PowerLedMode,
+}
+
+impl Default for CurrentSettings {
+    fn default() -> Self {
+        Self {
+            power_profile: PowerProfile::Default,
+            keyboard_backlight: KeyboardBacklightLevel::Medium,
+            fan_mode_cpu: FanMode::Auto,
+            fan_mode_gpu: FanMode::Auto,
+            charge_limit: ChargeLimit::FullCapacity,
+            led_mode: PowerLedMode::Auto,
+        }
+    }
 }
