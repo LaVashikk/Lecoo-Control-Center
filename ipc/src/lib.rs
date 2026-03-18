@@ -53,6 +53,9 @@ pub enum IpcRequest {
 
     /// Control the LED Ring
     SetLedMode(PowerLedMode),
+
+    /// Send a command to the daemon
+    DaemonCommand(DaemonCommand),
 }
 
 /// Responses sent FROM the Daemon TO the Client.
@@ -78,6 +81,9 @@ pub enum IpcResponse {
 
     /// Current power profile
     PowerLimit(PowerProfile),
+
+    /// Response from the daemon
+    DaemonResponse(DaemonResponse),
 
     /// Error message if something went wrong
     Error(String),

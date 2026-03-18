@@ -1,4 +1,28 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use bincode::{Decode, Encode};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
+pub enum DaemonCommand {
+    RestoreDefaults,
+    GetSettings,
+    ApplySettings,
+    GetTelemetryId,
+    ActivateTelemetry(bool),
+
+    ActivateProcessSuspend(bool),
+
+    RunPrepareShutdown,
+    RunPrepareSuspend,
+    RunPrepareResume,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
+pub enum DaemonResponse {
+    Settings(CurrentSettings),
+    TelemetryId(u64),
+
+}
 
 /// Represents the power profiles
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]

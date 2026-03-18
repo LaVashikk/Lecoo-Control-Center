@@ -75,11 +75,54 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::SetChargeLimit(limit) => set_charge_limit(ec, limit),
 
         IpcRequest::SetLedMode(mode) => set_led_mode(ec, mode),
+
+        // Daemon command
+        IpcRequest::DaemonCommand(daemon_command) => process_daemon_command(ec, daemon_command),
     };
 
     match result {
         Ok(success) => success,
         Err(err) => IpcResponse::Error(format!("Processing request failed: {}", err)),
+    }
+}
+
+fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcResponse> {
+    match command {
+        DaemonCommand::RestoreDefaults => {
+            let mut state = get_state()?;
+            *state = CurrentSettings::default();
+            state.save()?;
+            state.restore_state(ec)?;
+            Ok(IpcResponse::Success)
+        },
+
+        DaemonCommand::ActivateTelemetry(is_enabled) => {
+            let mut state = get_state()?;
+            state.telemetry_enabled = *is_enabled;
+            state.save()?;
+
+            if *is_enabled {
+                telemetry::enable();
+                Ok(IpcResponse::Success)
+            } else {
+                telemetry::disable();
+                Ok(IpcResponse::Message(
+                    "Anonymous Telemetry Disabled. Telemetry helps me improve the quality of this project.\nPlease consider enabling it, it's free and anonymous :)"
+                        .to_string()
+                ))
+            }
+        },
+
+        DaemonCommand::ApplySettings => {
+            let state = get_state()?;
+            state.restore_state(&ec)?;
+            Ok(IpcResponse::Success)
+        }
+        DaemonCommand::GetSettings => Ok(IpcResponse::DaemonResponse(DaemonResponse::Settings(get_state()?.clone()))),
+        DaemonCommand::GetTelemetryId => Ok(IpcResponse::DaemonResponse(DaemonResponse::TelemetryId(get_state()?.telemetry_client_id))),
+
+        // todo: suspend/resume
+        _ => todo!()
     }
 }
 

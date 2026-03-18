@@ -56,6 +56,12 @@ enum Commands {
         #[command(subcommand)]
         action: CliLedAction,
     },
+
+    /// Control daemon settings, only for advanced users
+    Daemon {
+        #[command(subcommand)]
+        action: CliDaemonAction,
+    },
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -85,6 +91,44 @@ enum CliLedAction {
     /// Set manual static brightness (0-255)
     Custom { val: u8 },
     // todo: add others
+}
+
+#[derive(Clone, Subcommand)]
+enum CliDaemonAction {
+    /// Change telemetry settings
+    Telemetry {
+        #[command(subcommand)]
+        telemetry_action: CliTelemetryAction
+    },
+
+    /// Change daemon settings
+    Settings {
+        #[command(subcommand)]
+        settings_action: CliSettingsAction
+    },
+
+    /// Get daemon version
+    Version,
+}
+
+#[derive(Subcommand, Clone)]
+enum CliTelemetryAction {
+    /// Enable telemetry
+    Enable,
+    /// Disable telemetry
+    Disable,
+    /// Get telemetry ID
+    Id,
+}
+
+#[derive(Subcommand, Clone)]
+enum CliSettingsAction {
+    /// Reset daemon settings to default
+    Reset,
+    /// Read daemon settings
+    Read,
+    /// Apply saved settings state
+    Apply,
 }
 
 // --- Custom Parsers ---
@@ -180,6 +224,23 @@ fn main() -> anyhow::Result<()> {
             };
             IpcRequest::SetLedMode(led_m)
         }
+
+        Commands::Daemon { action } => match action {
+            CliDaemonAction::Telemetry { telemetry_action } => match telemetry_action {
+                CliTelemetryAction::Enable => IpcRequest::DaemonCommand(ipc::DaemonCommand::ActivateTelemetry(true)),
+                CliTelemetryAction::Disable => IpcRequest::DaemonCommand(ipc::DaemonCommand::ActivateTelemetry(false)),
+                CliTelemetryAction::Id => IpcRequest::DaemonCommand(ipc::DaemonCommand::GetTelemetryId),
+            },
+            CliDaemonAction::Settings { settings_action } => match settings_action {
+                CliSettingsAction::Reset => IpcRequest::DaemonCommand(ipc::DaemonCommand::RestoreDefaults),
+                CliSettingsAction::Read => IpcRequest::DaemonCommand(ipc::DaemonCommand::GetSettings),
+                CliSettingsAction::Apply => IpcRequest::DaemonCommand(ipc::DaemonCommand::ApplySettings),
+            },
+            CliDaemonAction::Version => {
+                println!("{}.{}", client.daemon_version.0, client.daemon_version.1);
+                std::process::exit(0);
+            },
+        },
     };
 
     // --------------
@@ -227,6 +288,13 @@ fn main() -> anyhow::Result<()> {
             eprintln!("❌ Error: {}", msg);
             std::process::exit(1);
         }
+
+        IpcResponse::DaemonResponse(daemon_response) => match daemon_response {
+            ipc::DaemonResponse::Settings(settings) => println!("{:#?}", settings),
+            ipc::DaemonResponse::TelemetryId(id) => {
+                println!("🔗 Telemetry ID: 0x{:016X}", id);
+            },
+        },
     }
 
     Ok(())
