@@ -1,0 +1,16 @@
+[package]
+name = "telemetry_server"
+edition = "2024"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+tiny_http = "0.12.0"
+rusqlite = { version = "0.31", features = ["bundled"] }
+bincode = "2.0"
+ipc = { path = "../ipc" }
+simplelog = "0.11"
+log = "0.4"

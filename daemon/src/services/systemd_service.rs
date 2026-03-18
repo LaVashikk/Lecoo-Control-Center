@@ -1,5 +1,5 @@
 use std::sync::mpsc::Sender;
-use std::thread;
+use std::{panic, thread};
 use zbus::blocking::Connection;
 use super::InternalEvent;
 
@@ -10,6 +10,30 @@ pub fn init_logger() {
         .with_syslog_identifier("lecoo-daemon".to_string())
         .install().unwrap();
     log::set_max_level(log::LevelFilter::Info);
+
+    panic::set_hook(Box::new(|panic_info| {
+        let location = panic_info.location().unwrap();
+
+        let msg = match panic_info.payload().downcast_ref::<&'static str>() {
+            Some(s) => *s,
+            None => match panic_info.payload().downcast_ref::<String>() {
+                Some(s) => &s[..],
+                None => "Unknown panic message",
+            },
+        };
+
+        let error = format!(
+            "CRITICAL PANIC in file '{}' at line {}: {}",
+            location.file(),
+            location.line(),
+            msg
+        );
+
+        log::error!("{}", error);
+        crate::telemetry::send(
+            ipc::TelemetryData::Panic { error: error.clone() }
+        );
+    }));
 }
 
 #[zbus::proxy(

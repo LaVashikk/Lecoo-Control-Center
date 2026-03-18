@@ -262,10 +262,17 @@ pub struct CurrentSettings {
     pub charge_limit: ChargeLimit,
     /// Current power LED mode setting
     pub led_mode: PowerLedMode,
+    /// Whether telemetry is enabled
+    pub telemetry_enabled: bool,
+    pub telemetry_client_id: u64,
 }
 
 impl Default for CurrentSettings {
     fn default() -> Self {
+        let mut hasher = DefaultHasher::new();
+        std::time::SystemTime::now().hash(&mut hasher);
+        let client_id = hasher.finish();
+
         Self {
             power_profile: PowerProfile::Default,
             keyboard_backlight: KeyboardBacklightLevel::Medium,
@@ -273,6 +280,21 @@ impl Default for CurrentSettings {
             fan_mode_gpu: FanMode::Auto,
             charge_limit: ChargeLimit::FullCapacity,
             led_mode: PowerLedMode::Auto,
+            telemetry_enabled: true,
+            telemetry_client_id: client_id,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
+pub enum TelemetryData {
+    Startup { firmware: String, offset: u16 },
+    Status { profile: PowerProfile, temps: [u32; 2], fans: [u32; 2] },
+    Panic { error: String },
+}
+
+#[derive(Debug, Clone, Encode, Decode)]
+pub struct TelemetryPayload {
+    pub id: u64,
+    pub data: TelemetryData,
 }

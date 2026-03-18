@@ -13,6 +13,7 @@ use crate::handlers::DaemonState;
 pub mod ec;
 mod handlers;
 mod services;
+mod telemetry;
 
 pub static EC: OnceLock<ec::EcDevice> = OnceLock::new();
 pub static STATE: OnceLock<Mutex<CurrentSettings>> = OnceLock::new();
@@ -107,12 +108,16 @@ fn main() -> Result<()> {
         log::error!("Failed to restore EC state: {}", e);
     }
 
+    telemetry::init(daemon_state.telemetry_enabled, daemon_state.telemetry_client_id);
+
+    if daemon_state.telemetry_enabled {
+        let (chip_id1, chip_id2, chip_ver) = ec::read_system_info(&ec)?;
+        telemetry::send(ipc::TelemetryData::Startup { firmware: format!("IT{:02X}{:02X}-{:02X}", chip_id1, chip_id2, chip_ver), offset: ec.hram_offset });
+    }
+
     let _ = EC.set(ec);
     let _ = STATE.set(Mutex::new(daemon_state));
     let (tx_to_core, rx_in_core) = std::sync::mpsc::channel();
-
-    // todo: telemetry
-    // daemon commands
 
     let _service_worker = services::start(tx_to_core);
     info!("Daemon started.");

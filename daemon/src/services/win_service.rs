@@ -6,6 +6,7 @@ use std::time::Duration;
 use file_rotate::compression::Compression;
 use file_rotate::suffix::AppendCount;
 use file_rotate::{ContentLimit, FileRotate};
+use ipc::TelemetryData;
 use log::{LevelFilter, info};
 use simplelog::{Config, WriteLogger};
 use windows_service::service::ServiceType;
@@ -132,11 +133,16 @@ pub fn init_logger() {
             },
         };
 
-        log::error!(
+        let error = format!(
             "CRITICAL PANIC in file '{}' at line {}: {}",
             location.file(),
             location.line(),
             msg
+        );
+
+        log::error!("{}", error);
+        crate::telemetry::send(
+            TelemetryData::Panic { error }
         );
     }));
 }
