@@ -1,0 +1,101 @@
+[release]
+notes_header = """
+## 🚀 Lecoo Control Center
+
+A low-level Embedded Controller (EC) daemon and CLI for fan control, power limits (TDP), charge limits (FlexiCharger), and lighting management for Lecoo Pro 14.
+
+### ⚠️ Important Disclaimer
+This software interacts directly with your system's hardware. **Use at your own risk!** Incorrect configurations (e.g., setting custom fan curves to 0 RPM under heavy load) can result in overheating and irreversible hardware damage.
+
+### 🛠️ How to Install
+
+**Windows:**
+1. Download the `*-windows.zip` archive below and extract it to a folder.
+2. Right-click on `install.bat` and select **"Run as Administrator"**.
+3. Open a *new* terminal window and type `lecoo-ctrl help`.
+
+**Linux:**
+1. Download the `*-linux.tar.gz` archive and extract it.
+2. Open a terminal in the extracted folder and run: `sudo ./install.sh`.
+3. Use the `lecoo-ctrl` command to manage the daemon.
+
+### 📖 Useful Links
+* 🇬🇧 [English README](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README.md) | 🇷🇺 [Russian README](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README_RU.md)
+* 🐛 [Report a Bug or Request a Feature](https://github.com/LaVashikk/Lecoo-Control-Center/issues)
+* ☕ [Support the Development](https://pay.cloudtips.ru/p/7e960f26)
+"""
+
+[[bundles]]
+id      = "windows"
+enabled = true
+runner  = "windows-latest"
+archive = "lecoo-{version}-windows.zip"
+
+rust_targets = ["x86_64-pc-windows-msvc"]
+
+setup = []
+
+build = [
+    "cargo build --release --target x86_64-pc-windows-msvc -p lecoo-ec-daemon",
+    "cargo build --release --target x86_64-pc-windows-msvc -p lecoo-ctrl",
+    # "cargo build --release --target x86_64-pc-windows-msvc -p lecoo-gui",
+]
+
+[[bundles.files]]
+src = "target/x86_64-pc-windows-msvc/release/lecoo-ec-daemon.exe"
+dst = "lecoo-ec-daemon.exe"
+
+[[bundles.files]]
+src = "target/x86_64-pc-windows-msvc/release/lecoo-ctrl.exe"
+dst = "lecoo-ctrl.exe"
+
+[[bundles.files]]
+src = "libs/inpoutx64.dll"
+dst = "inpoutx64.dll"
+
+[[bundles.files]]
+src = "scripts/windows/install.bat"
+dst = "install.bat"
+
+[[bundles.files]]
+src = "scripts/windows/uninstall.bat"
+dst = "uninstall.bat"
+
+[[bundles.files]]
+src = "LICENSE"
+dst = "LICENSE"
+
+[[bundles]]
+id      = "linux-x86_64"
+enabled = true
+runner  = "ubuntu-latest"
+archive = "lecoo-{version}-linux.tar.gz"
+
+rust_targets = []
+
+setup = []
+
+build = [
+    "cargo build --release -p lecoo-ec-daemon",
+    "cargo build --release -p lecoo-ctrl",
+]
+
+[[bundles.files]]
+src = "target/release/lecoo-ec-daemon"
+dst = "lecoo-ec-daemon"
+
+[[bundles.files]]
+src = "target/release/lecoo-ctrl"
+dst = "lecoo-ctrl"
+
+[[bundles.files]]
+src = "scripts/linux/install.sh"
+dst = "install.sh"
+
+[[bundles.files]]
+src = "scripts/linux/uninstall.sh"
+dst = "uninstall.sh"
+
+[[bundles.files]]
+src = "LICENSE"
+dst = "LICENSE"

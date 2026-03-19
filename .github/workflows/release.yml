@@ -1,0 +1,280 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  prepare:
+    name: Prepare matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate build matrix from release.toml
+        id: matrix
+        shell: python
+        run: |
+          import json, tomllib, pathlib, os, sys
+
+          config = tomllib.loads(
+              pathlib.Path("release.toml").read_text(encoding="utf-8")
+          )
+          bundles = [
+              b for b in config.get("bundles", [])
+              if b.get("enabled", True)
+          ]
+          if not bundles:
+              print("ERROR: no enabled bundles in release.toml", file=sys.stderr)
+              sys.exit(1)
+
+          matrix = {
+              "include": [
+                  {"id": b["id"], "runner": b["runner"]}
+                  for b in bundles
+              ]
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"result={json.dumps(matrix)}\n")
+
+          print(json.dumps(matrix, indent=2))
+
+  build:
+    name: "Build · ${{ matrix.id }}"
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Extract bundle config
+        id: cfg
+        shell: python
+        env:
+          BUNDLE_ID: ${{ matrix.id }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          import json, tomllib, pathlib, os
+
+          config = tomllib.loads(
+              pathlib.Path("release.toml").read_text(encoding="utf-8")
+          )
+          bid = os.environ["BUNDLE_ID"]
+          bundle = next(b for b in config["bundles"] if b["id"] == bid)
+
+          pathlib.Path("bundle.json").write_text(
+              json.dumps(bundle), encoding="utf-8"
+          )
+
+          version = os.environ["REF_NAME"].lstrip("v")
+          archive = bundle["archive"].replace("{version}", version)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"archive={archive}\n")
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Add extra Rust targets
+        shell: python
+        run: |
+          import json, pathlib, subprocess
+          bundle = json.loads(pathlib.Path("bundle.json").read_text())
+          for t in bundle.get("rust_targets", []):
+              print(f"  rustup target add {t}")
+              subprocess.run(["rustup", "target", "add", t], check=True)
+
+      - name: Run setup commands
+        shell: python
+        run: |
+          import json, pathlib, subprocess
+          bundle = json.loads(pathlib.Path("bundle.json").read_text())
+          for cmd in bundle.get("setup", []):
+              print(f"  ▸ {cmd}")
+              subprocess.run(cmd, shell=True, check=True)
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.id }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.id }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Build
+        shell: python
+        run: |
+          import json, pathlib, subprocess, sys
+
+          bundle = json.loads(pathlib.Path("bundle.json").read_text())
+
+          commands = bundle.get("build", [])
+          if isinstance(commands, str):
+              commands = [commands]
+
+          for i, cmd in enumerate(commands, 1):
+              print(f"\n{'='*60}")
+              print(f"  [{i}/{len(commands)}] {cmd}")
+              print(f"{'='*60}\n", flush=True)
+              result = subprocess.run(cmd, shell=True)
+              if result.returncode != 0:
+                  print(f"FAILED (exit {result.returncode}): {cmd}", file=sys.stderr)
+                  sys.exit(result.returncode)
+
+          print(f"\nAll {len(commands)} build(s) succeeded.")
+
+      - name: Package artifact
+        shell: python
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          import json, pathlib, shutil, hashlib, os, sys
+
+          bundle  = json.loads(pathlib.Path("bundle.json").read_text())
+          version = os.environ["REF_NAME"].lstrip("v")
+          archive = bundle["archive"].replace("{version}", version)
+
+          # Stage files
+          staging = pathlib.Path("staging")
+          if staging.exists():
+              shutil.rmtree(staging)
+          staging.mkdir()
+
+          for f in bundle["files"]:
+              src = pathlib.Path(f["src"])
+              dst = staging / f["dst"]
+              if not src.exists():
+                  print(f"ERROR: file not found -> {src}", file=sys.stderr)
+                  sys.exit(1)
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              if src.is_dir():
+                  shutil.copytree(src, dst)
+              else:
+                  shutil.copy2(src, dst)
+              print(f"  {src}  ->  {dst}")
+
+          # Create archive
+          dist = pathlib.Path("dist")
+          dist.mkdir(exist_ok=True)
+
+          if archive.endswith(".tar.gz"):
+              base = str(dist / archive[:-7])
+              shutil.make_archive(base, "gztar", root_dir=str(staging))
+          elif archive.endswith(".zip"):
+              base = str(dist / archive[:-4])
+              shutil.make_archive(base, "zip", root_dir=str(staging))
+          else:
+              print(f"ERROR: unsupported format -> {archive}", file=sys.stderr)
+              sys.exit(1)
+
+          archive_path = dist / archive
+          size = archive_path.stat().st_size
+          print(f"\n  Archive: {archive_path}  ({size:,} bytes)")
+
+          # SHA-256
+          sha = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+          (dist / f"{archive}.sha256").write_text(sha)
+          print(f"  SHA-256: {sha}")
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.id }}
+          path: dist/*
+
+
+  release:
+    name: Publish Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Generate release notes
+        shell: python
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          import tomllib, pathlib, os, re
+
+          config  = tomllib.loads(
+              pathlib.Path("release.toml").read_text(encoding="utf-8")
+          )
+          tag     = os.environ["REF_NAME"]
+          version = tag.lstrip("v")
+          repo    = os.environ["REPO"]
+          base    = f"https://github.com/{repo}/releases/download/{tag}"
+
+          body = config.get("release", {}).get("notes_header", "").strip()
+          body += "\n\n## Downloads\n\n"
+          body += "| File | Checksum |\n|---|---|\n"
+
+          for b in config.get("bundles", []):
+              if not b.get("enabled", True):
+                  continue
+              a = b["archive"].replace("{version}", version)
+              body += f"| [{a}]({base}/{a}) | [SHA256]({base}/{a}.sha256) |\n"
+
+          body += "\n"
+
+          # Changelog section
+          cl = pathlib.Path("CHANGELOG.md")
+          if cl.exists():
+              lines     = cl.read_text(encoding="utf-8").splitlines()
+              pattern   = re.compile(rf"^## \[{re.escape(version)}\]")
+              capturing = False
+              captured  = []
+              for line in lines:
+                  if pattern.match(line):
+                      capturing = True
+                      continue
+                  if capturing and line.startswith("## ["):
+                      break
+                  if capturing:
+                      captured.append(line)
+              content = "\n".join(captured).strip()
+              if content:
+                  body += f"## What's Changed\n\n{content}\n"
+
+          pathlib.Path("releasenotes.md").write_text(body, encoding="utf-8")
+          print(body)
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          name: "Release ${{ github.ref_name }}"
+          body_path: releasenotes.md
+          prerelease: ${{ contains(github.ref_name, '-') }}

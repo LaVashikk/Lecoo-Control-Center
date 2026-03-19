@@ -1,0 +1,9 @@
+# [build]
+# target = "x86_64-pc-windows-gnu"
+
+[alias]
+run-ctrl =          "run -p lecoo-ctrl"
+build-win =         "build --release --target x86_64-pc-windows-gnu -p lecoo-ec-daemon"
+build-ctrl-win =    "build --release --target x86_64-pc-windows-gnu -p lecoo-ctrl"
+build-linux =       "build --release -p lecoo-ec-daemon"
+build-ctrl-linux =  "build --release -p lecoo-ctrl"
