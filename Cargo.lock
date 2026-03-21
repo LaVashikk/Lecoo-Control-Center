@@ -573,7 +573,7 @@ dependencies = [
 
 [[package]]
 name = "gui"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "ipc",
@@ -709,7 +709,7 @@ dependencies = [
 
 [[package]]
 name = "ipc"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "bincode",
  "interprocess",
@@ -746,7 +746,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "lecoo-ctrl"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -755,7 +755,7 @@ dependencies = [
 
 [[package]]
 name = "lecoo-ec-daemon"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1186,7 +1186,7 @@ dependencies = [
 
 [[package]]
 name = "telemetry_server"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "bincode",
  "ipc",

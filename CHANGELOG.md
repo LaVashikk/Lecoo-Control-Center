@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.2] - 2026-03-21
+
+### Changed
+- The daemon now completely restores all device settings (including battery charge limits) upon system wake-up, whereas previously only the LED mode was restored.
+- The Linux installation script (`install.sh`) now features extensive pre-installation safety checks, including `/dev/port` accessibility validation and virtualization detection.
+- The Linux uninstallation script (`uninstall.sh`) now interactively prompts the user before deleting saved daemon configuration data.
+
+### Fixed
+- Fixed an issue where battery charge limits were not being saved to the configuration state during system shutdown or hibernation.
+- Fixed Linux daemon failing to properly detect and handle system hibernation (S4) by implementing `systemd` job monitoring alongside `logind`.
+- Fixed Windows daemon power event handling to properly map Suspend events to the new hibernation logic, ensuring state is saved correctly on Windows platforms.
+
+
 ## [0.3.1] - 2026-03-20
 
 ### Added
