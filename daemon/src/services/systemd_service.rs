@@ -37,6 +37,29 @@ pub fn init_logger() {
 }
 
 #[zbus::proxy(
+    interface = "org.freedesktop.systemd1.Manager",
+    default_service = "org.freedesktop.systemd1",
+    default_path = "/org/freedesktop/systemd1"
+)]
+trait SystemdManager {
+    /// systemd signals subscription
+    fn subscribe(&self) -> zbus::Result<()>;
+
+    /// New signal for systemd job creation
+    #[zbus(signal)]
+    fn job_new(&self, id: u32, job: zbus::zvariant::OwnedObjectPath, unit: String) -> zbus::Result<()>;
+}
+
+#[zbus::proxy(
+    interface = "org.freedesktop.systemd1.Job",
+    default_service = "org.freedesktop.systemd1"
+)]
+trait SystemdJob {
+    #[zbus(property)]
+    fn job_type(&self) -> zbus::Result<String>;
+}
+
+#[zbus::proxy(
     interface = "org.freedesktop.login1.Manager",
     default_service = "org.freedesktop.login1",
     default_path = "/org/freedesktop/login1"
@@ -54,10 +77,67 @@ trait LoginManager {
 pub fn run_as_service(tx: Sender<InternalEvent>) -> zbus::Result<()> {
     let conn = Connection::system()?;
 
+    // Suspend/Hibernate detection
+    let tx_systemd = tx.clone();
+    let conn_systemd = conn.clone();
+    let _sleep_thread = thread::Builder::new()
+        .name("systemd-jobs".into())
+        .spawn(move || {
+            let manager = match SystemdManagerProxyBlocking::new(&conn_systemd) {
+                Ok(m) => m,
+                Err(e) => { log::error!("systemd proxy error: {e}"); return; }
+            };
+
+            if let Err(e) = manager.subscribe() {
+                log::error!("failed to subscribe to systemd signals: {e}");
+                return;
+            }
+
+            let signals = match manager.receive_job_new() {
+                Ok(s) => s,
+                Err(e) => { log::error!("job_new subscribe error: {e}"); return; }
+            };
+
+            for sig in signals {
+                let Ok(args) = sig.args() else { continue };
+
+                let is_sleep_unit = match args.unit.as_str() {
+                    "suspend.target" | "hibernate.target" | "hybrid-sleep.target" | "suspend-then-hibernate.target" => true,
+                    _ => false,
+                };
+
+                if !is_sleep_unit { continue; }
+
+                if let Ok(job_proxy) = SystemdJobProxyBlocking::builder(&conn_systemd)
+                    .path(args.job.clone())
+                    .unwrap()
+                    .build()
+                {
+                    if let Ok(job_type) = job_proxy.job_type() {
+                        if job_type != "start" {
+                            log::debug!("Ignoring '{}' job for {}", job_type, args.unit);
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+                let event = match args.unit.as_str() {
+                    "suspend.target" => InternalEvent::SystemSleeping,
+                    _ => InternalEvent::SystemHibernating,
+                };
+
+                if tx_systemd.send(event).is_err() {
+                    break;
+                }
+            }
+        })
+        .expect("failed to spawn systemd-jobs thread");
+
+    // wakeups
     let tx_sleep = tx.clone();
     let conn_sleep = conn.clone();
-
-    let _sleep_thread = thread::Builder::new()
+    let _wakeups_thread = thread::Builder::new()
         .name("logind-sleep".into())
         .spawn(move || {
             let proxy = match LoginManagerProxyBlocking::new(&conn_sleep) {
@@ -71,13 +151,11 @@ pub fn run_as_service(tx: Sender<InternalEvent>) -> zbus::Result<()> {
 
             for sig in signals {
                 let Ok(args) = sig.args() else { continue };
-                let event = if args.start {
-                    InternalEvent::SystemSleeping
-                } else {
-                    InternalEvent::SystemWakingUp
-                };
-                if tx_sleep.send(event).is_err() {
-                    return;
+
+                if !args.start {
+                    if tx_sleep.send(InternalEvent::SystemWakingUp).is_err() {
+                        break;
+                    }
                 }
             }
         })
@@ -89,7 +167,7 @@ pub fn run_as_service(tx: Sender<InternalEvent>) -> zbus::Result<()> {
         let Ok(args) = sig.args() else { continue };
         if args.start {
             let _ = tx.send(InternalEvent::SystemShuttingDown);
-            // no need to listen further after shutdown
+            break; // no need to listen further after shutdown
         }
     }
 

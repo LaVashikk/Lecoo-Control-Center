@@ -15,6 +15,7 @@ pub use systemd_service::{init_logger, get_system_info};
 pub enum InternalEvent {
     SystemShuttingDown,
     SystemSleeping,
+    SystemHibernating,
     SystemWakingUp,
     #[cfg(windows)]
     Inited,

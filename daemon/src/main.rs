@@ -64,8 +64,8 @@ fn process_service(rx_in_core: std::sync::mpsc::Receiver<services::InternalEvent
         match rx_in_core.recv() {
             Ok(event) => {
                 match event {
-                    services::InternalEvent::SystemShuttingDown => {
-                        ec::apply_led_mode(ec, &PowerLedMode::Auto).expect("Failed to set LED mode to Auto");
+                    services::InternalEvent::SystemShuttingDown | services::InternalEvent::SystemHibernating => {
+                        let _ = ec::apply_led_mode(ec, &PowerLedMode::Auto);
                         if let Ok(mut state) = handlers::get_state() {
                             let _ = ec::read_keyboard_backlight(ec).map(|kbd| state.keyboard_backlight = kbd);
                             let _ = ec::read_power_profile(ec).map(|profile| state.power_profile = profile);
