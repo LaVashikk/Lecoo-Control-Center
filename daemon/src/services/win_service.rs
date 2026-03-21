@@ -56,13 +56,9 @@ fn my_service_main(_arguments: Vec<std::ffi::OsString>) {
         SERVICE_NAME,
         move |control_event| -> ServiceControlHandlerResult {
             match control_event {
-                ServiceControl::Stop => {
+                ServiceControl::Stop | ServiceControl::Shutdown => {
+                    let _ = tx.send(InternalEvent::SystemShuttingDown);
                     let _ = tx_to_stop.send(());
-                    let _ = tx.send(InternalEvent::SystemShuttingDown);
-                    ServiceControlHandlerResult::NoError
-                }
-                ServiceControl::Shutdown => {
-                    let _ = tx.send(InternalEvent::SystemShuttingDown);
                     ServiceControlHandlerResult::NoError
                 }
                 ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
@@ -72,7 +68,7 @@ fn my_service_main(_arguments: Vec<std::ffi::OsString>) {
                         PowerEventParam::Suspend => {
                             // INFO: The Lecoo Pro 14's sleep state (s2idle) is not functional, it's broken, but Fast Boot is considered suspended for the service.
                             // Treat as shutdown since we can't actually enter a proper sleep state.
-                            let _ = tx.send(InternalEvent::SystemShuttingDown);
+                            let _ = tx.send(InternalEvent::SystemHibernating);
                         }
 
                         PowerEventParam::ResumeAutomatic
