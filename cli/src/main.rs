@@ -82,6 +82,7 @@ enum CliPowerProfile {
 enum CliFanIndex {
     Cpu,
     Gpu,
+    Both,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -211,14 +212,18 @@ fn main() -> anyhow::Result<()> {
         }
 
         Commands::Fan { target, mode, val } => {
-            let fan_idx = match target {
-                CliFanIndex::Cpu => FanIndex::Cpu,
-                CliFanIndex::Gpu => FanIndex::Gpu,
-            };
             let fan_mode = match mode {
                 CliFanMode::Auto => FanMode::Auto,
                 CliFanMode::Full => FanMode::Full,
                 CliFanMode::Custom => FanMode::Custom(val.unwrap_or(0)),
+            };
+            let fan_idx = match target {
+                CliFanIndex::Cpu => FanIndex::Cpu,
+                CliFanIndex::Gpu => FanIndex::Gpu,
+                CliFanIndex::Both => {
+                    let _: IpcResponse = client.request(&IpcRequest::SetFanMode { fan: FanIndex::Cpu, mode: fan_mode } )?;
+                    FanIndex::Gpu
+                },
             };
             IpcRequest::SetFanMode { fan: fan_idx, mode: fan_mode }
         }
