@@ -1,3 +1,5 @@
+use std::io::{self, Write};
+
 use anyhow::Context;
 use clap::{Parser, Subcommand, ValueEnum};
 use ipc::{ChargeLimit, FanIndex, FanMode, IpcClient, IpcRequest, IpcResponse, KeyboardBacklightLevel, PowerLedMode, PowerProfile};
@@ -20,6 +22,11 @@ enum Commands {
 
     /// Get current fan speeds (RPM)
     Fans,
+
+    /// Get real-time monitoring of temps and fans
+    Monitoring {
+        rate: Option<f32>
+    },
 
     /// Control fan settings (e.g., `fan cpu auto`, `fan gpu custom 150`)
     Fan {
@@ -171,6 +178,25 @@ fn main() -> anyhow::Result<()> {
         Commands::Info => IpcRequest::GetSystemState,
         Commands::Temps => IpcRequest::GetTemperatures,
         Commands::Fans => IpcRequest::GetFansRPM,
+
+
+        Commands::Monitoring { rate } => {
+            let update_rate = (rate.unwrap_or(1.0) * 1000.0) as u64;
+            println!("Monitoring enabled. Update rate: {} ms", update_rate);
+            loop {
+                let IpcResponse::Temp(cpu, system) = client.request(&IpcRequest::GetTemperatures)? else { unreachable!() };
+                let IpcResponse::FanRPM(cpu_fan, gpu_fan) = client.request(&IpcRequest::GetFansRPM)? else { unreachable!() };
+
+                print!("\r🌡️ CPU: {}°C, Sys: {}°C | 💨 Fans: {} RPM (CPU), {} RPM (GPU)      ",
+                    cpu, system, cpu_fan, gpu_fan
+                );
+                io::stdout().flush().unwrap();
+
+                std::thread::sleep(
+                    std::time::Duration::from_millis(update_rate)
+                );
+            }
+        }
 
         Commands::Power { profile } => match profile {
             None => IpcRequest::GetPowerProfile,
