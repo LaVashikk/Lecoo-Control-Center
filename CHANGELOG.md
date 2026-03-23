@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.3] - 2026-03-23
+
+### Added
+- Added a new `monitoring` CLI command for real-time, continuous tracking of CPU/System temperatures and fan speeds.
+- Added a `both` target option to the `fan` CLI command, allowing users to control CPU and GPU fans simultaneously (e.g., `fan both auto`).
+
+### Changed
+- Updated the Windows daemon initialization logic to explicitly require a `--service` flag and introduced a 3-second startup delay to improve service stability.
+
+### Fixed
+- Ensured that panic logs in the Windows service are explicitly flushed to disk before telemetry is sent, preventing log data loss during a crash.
+
+
 ## [0.3.2] - 2026-03-21
 
 ### Changed
