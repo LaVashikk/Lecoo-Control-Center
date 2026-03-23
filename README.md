@@ -45,6 +45,14 @@ This software is primarily developed and tested on the Lecoo Pro 14 (Lecoo N155)
 
 If you successfully run this on an unlisted hardware revision or a different Emdoor chassis, please open an issue or contact me to update the compatibility list!
 
+## Known Issues
+
+* **Windows 11 Daemon Auto-start:** The background daemon currently fails to start automatically on Windows 11. The root cause is still under investigation.
+* **FlexiCharger Reset on Power Loss:** If the laptop is powered off and unplugged from the wall for more than 5 minutes, the Embedded Controller (EC) clears its memory and resets the charge limits. If you plug the laptop in *before* booting up, the battery will charge to 100%. However, once the system boots and the daemon initializes, the battery will naturally discharge back down to your configured limit and resume normal behavior.
+* **Charge Indicator in Custom LED Mode:** When the rear LED ring is set to `custom` mode, the standard battery charge indicator stops functioning.
+* **LED Ring Stays On After Hard Shutdown:** If you perform a hard power-off (holding the power button) while the rear LED ring is in `custom` mode, the ring will remain lit. **Workaround:** Turn the laptop on and shut it down normally.
+* **Conflicts with Official Software:** Using the `power` command to adjust TDP profiles may conflict with the manufacturer's official software (`PowerModeUtility`). It is highly recommended to use only one of these tools at a time.
+
 ## Usage (CLI)
 
 The daemon runs in the background. You interact with it using the `lecoo-ctrl` command-line tool.
@@ -141,3 +149,8 @@ If you find this tool useful and want to support its continued development, cons
 
 * **International:** [Donate via Lava.top](https://app.lava.top/lavashik?tabId=donate)
 * **Russia:** [Donate via CloudTips](https://pay.cloudtips.ru/p/7e960f26)
+* **China:** [Alipay](branding/alipay.jpg)
+* **Cryptocurrency:**
+  * **SOL (Solana):** `CvbAT3VduADYyGRBZDq5CD3kLYcYYjYjFzgWFftsbgAB`
+  * **ETH (ERC-20):** `0x44B03F26B4dc7b8AcBBCFc456e4181872386a8D8`
+  * **BTC (Native Segwit):** `bc1q3sej9r9v9syamjanq7mg6a7002pc4m6d6qnv6k`
