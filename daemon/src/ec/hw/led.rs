@@ -7,6 +7,12 @@ use super::EcDevice;
 /// EC state override (0x00 = Auto, 0x01 = Custom/Bypass)
 const RAM_LED_BYPASS: u16 = 0x55;
 
+const REG_GPDRA: u16 = 0x1601;
+
+const MASK_ORANGE_LED: u8 = 0x02; // bit 1
+const MASK_WHITE_LED: u8  = 0x04; // bit 2
+
+
 /// Port A0 Control (Switches pin to manual PWM mode)
 const REG_GPIO_A0_MUX: u16 = 0x1610;
 
@@ -16,6 +22,8 @@ const REG_PWM_PRESCALER: u16 = 0x1800;
 const REG_PWM_CYCLE: u16 = 0x1801;
 /// Main brightness level (Duty Cycle)
 const REG_PWM_DUTY: u16 = 0x1802;
+
+const REG_PWM_CLOCK_CTRL: u16 = 0x1823; // ZTIER
 
 /// Hardware breathing toggle/enable
 const REG_LED_BREATH_EN: u16 = 0x1850;
@@ -87,4 +95,22 @@ pub fn apply_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn apply_battery_leds(ec: &EcDevice, orange_on: bool, white_on: bool) -> Result<()> {
+    let mut port_a = ec.read_reg(REG_GPDRA)?;
+
+    if orange_on {
+        port_a &= !MASK_ORANGE_LED; // On
+    } else {
+        port_a |= MASK_ORANGE_LED;  // Off
+    }
+
+    if white_on {
+        port_a &= !MASK_WHITE_LED;  // On
+    } else {
+        port_a |= MASK_WHITE_LED;   // Off
+    }
+
+    ec.write_reg(REG_GPDRA, port_a)
 }
