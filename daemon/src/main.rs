@@ -1,6 +1,6 @@
 // #![windows_subsystem = "windows"]
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 use ipc::{ChargeLimit, CurrentSettings, IpcConnection, IpcRequest, IpcServer};
 use log::info;
 use std::{sync::{Mutex, OnceLock}, thread};
@@ -87,6 +87,22 @@ fn process_service(rx_in_core: std::sync::mpsc::Receiver<services::InternalEvent
 
                     services::InternalEvent::SystemWakingUp => {
                         let _ = handlers::get_state().map(|state| state.restore_state(ec));
+                    }
+
+                    services::InternalEvent::ChargerConnected => {
+                        if let Ok(current) = ec::read_battery_rsoc(ec) {
+                            if let Ok(charge_limits) = ec::read_charge_limit(ec) {
+                                if current >= charge_limits.1 {
+                                    let _ = ec::apply_battery_leds(ec, false, true);
+                                } else {
+                                    let _ = ec::apply_battery_leds(ec, true, false);
+                                }
+                            }
+                        }
+                    }
+
+                    services::InternalEvent::ChargerDisconnected => {
+                        let _ = ec::apply_battery_leds(ec, false, false);
                     }
 
                     #[cfg(windows)]

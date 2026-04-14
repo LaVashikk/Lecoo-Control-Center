@@ -161,6 +161,38 @@ pub fn run_as_service(tx: Sender<InternalEvent>) -> zbus::Result<()> {
         })
         .expect("failed to spawn logind-sleep");
 
+    // battery status
+    let tx_power = tx.clone();
+    let conn_power = conn.clone();
+    let _power_thread = thread::Builder::new()
+        .name("upower-monitor".into())
+        .spawn(move || {
+            let proxy = match UPowerProxyBlocking::new(&conn_power) {
+                Ok(p) => p,
+                Err(e) => { log::error!("upower proxy error: {e}"); return; }
+            };
+
+            let changed_stream = proxy.receive_on_battery_changed();
+
+            // TODO: Yes, if connect the charger to 98% and wait until it reaches max, the indicator WILL NOT update.
+            // and yes, i need to find a way to update it, or use full UPower proxy. but I'M SOOOO LAZY.
+            // who cares about power indicator :) It just works.
+            for changed in changed_stream {
+                if let Ok(on_battery) = changed.get() {
+                    let event = if on_battery {
+                        InternalEvent::ChargerDisconnected
+                    } else {
+                        InternalEvent::ChargerConnected
+                    };
+
+                    if tx_power.send(event).is_err() {
+                        break;
+                    }
+                }
+            }
+        })
+        .expect("failed to spawn upower-monitor thread");
+
     let proxy = LoginManagerProxyBlocking::new(&conn)?;
 
     for sig in proxy.receive_prepare_for_shutdown()? {
