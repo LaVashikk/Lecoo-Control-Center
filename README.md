@@ -13,6 +13,7 @@ Lecoo Control Center is a reverse-engineered, low-level Embedded Controller (EC)
 [![Language](https://img.shields.io/badge/language-Rust-orange.svg)]()
 
 🇷🇺 [Russian Readme here](README_RU.md)
+CN [中文 Readme 在这](README_CN.md)
 
 </div>
 
