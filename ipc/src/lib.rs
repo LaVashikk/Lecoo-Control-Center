@@ -1,6 +1,6 @@
 use bincode::{Decode, Encode, config};
 use interprocess::local_socket::{GenericNamespaced, Stream, ToNsName};
-use std::io::{Read, self, Write};
+use std::io::{self, Read, Write};
 
 mod client;
 mod server;
@@ -27,6 +27,9 @@ pub enum IpcRequest {
     /// Get system temperatures
     GetTemperatures,
 
+    /// Get both temperatures and fan RPMs atomically (single round-trip).
+    GetMonitoring,
+
     /// Get the current battery charge limit
     GetChargeLimit,
 
@@ -40,10 +43,7 @@ pub enum IpcRequest {
     SetPowerProfile(PowerProfile),
 
     /// Set a specific fan's mode (Auto/Full/Custom)
-    SetFanMode {
-        fan: FanIndex,
-        mode: FanMode,
-    },
+    SetFanMode { fan: FanIndex, mode: FanMode },
 
     /// Set keyboard backlight brightness
     SetKeyboardBacklight(KeyboardBacklightLevel),
@@ -57,7 +57,6 @@ pub enum IpcRequest {
     /// Send a command to the daemon
     DaemonCommand(DaemonCommand),
 }
-
 
 /// Responses sent FROM the Daemon TO the Client.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
@@ -73,6 +72,9 @@ pub enum IpcResponse {
 
     /// Temperature readings for CPU and System
     Temp(u8, u8),
+
+    /// Combined monitoring snapshot: (cpu_temp, sys_temp, cpu_rpm, gpu_rpm)
+    Monitoring(u8, u8, u16, u16),
 
     /// Current battery charge limit (min/max percentages)
     ChargeLimit(u8, u8, u8),
@@ -103,25 +105,45 @@ impl IpcConnection {
         self.stream.read_exact(&mut req)?;
 
         if &req[0..3] != b"LCC" {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid magic bytes"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid magic bytes",
+            ));
         }
 
         let client_major_ver = req[3];
         let client_minor_ver = req[4];
 
-        if client_major_ver != IPC_PROTOCOL_VERSION[0] || client_minor_ver != IPC_PROTOCOL_VERSION[1] {
-            let resp = [b'E', b'R', b'R', IPC_PROTOCOL_VERSION[0], IPC_PROTOCOL_VERSION[1]];
+        if client_major_ver != IPC_PROTOCOL_VERSION[0]
+            || client_minor_ver != IPC_PROTOCOL_VERSION[1]
+        {
+            let resp = [
+                b'E',
+                b'R',
+                b'R',
+                IPC_PROTOCOL_VERSION[0],
+                IPC_PROTOCOL_VERSION[1],
+            ];
             let _ = self.stream.write_all(&resp);
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("Version mismatch. Client: v{}.{}, Server: v{}.{}",
-                    client_major_ver, client_minor_ver,
-                    IPC_PROTOCOL_VERSION[0], IPC_PROTOCOL_VERSION[1]
-                )
+                format!(
+                    "Version mismatch. Client: v{}.{}, Server: v{}.{}",
+                    client_major_ver,
+                    client_minor_ver,
+                    IPC_PROTOCOL_VERSION[0],
+                    IPC_PROTOCOL_VERSION[1]
+                ),
             ));
         }
 
-        let resp = [b'O', b'K', b'K', IPC_PROTOCOL_VERSION[0], IPC_PROTOCOL_VERSION[1]];
+        let resp = [
+            b'O',
+            b'K',
+            b'K',
+            IPC_PROTOCOL_VERSION[0],
+            IPC_PROTOCOL_VERSION[1],
+        ];
         self.stream.write_all(&resp)?;
 
         Ok(())
@@ -148,9 +170,15 @@ impl IpcConnection {
             let n = self.stream.read(&mut len_bytes[bytes_read..])?;
             if n == 0 {
                 if bytes_read == 0 {
-                    return Err(io::Error::new(io::ErrorKind::ConnectionReset, "Connection reset by peer"));
+                    return Err(io::Error::new(
+                        io::ErrorKind::ConnectionReset,
+                        "Connection reset by peer",
+                    ));
                 } else {
-                    return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "Connection dropped while reading"));
+                    return Err(io::Error::new(
+                        io::ErrorKind::UnexpectedEof,
+                        "Connection dropped while reading",
+                    ));
                 }
             }
             bytes_read += n;
@@ -162,11 +190,17 @@ impl IpcConnection {
         self.stream.read_exact(&mut msg_version)?;
 
         if msg_version[0] != IPC_PROTOCOL_VERSION[0] || msg_version[1] != IPC_PROTOCOL_VERSION[1] {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "IPC protocol version mismatch"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "IPC protocol version mismatch",
+            ));
         }
 
         if len > 5 * 1024 * 1024 {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "IPC payload too large"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "IPC payload too large",
+            ));
         }
 
         let mut data = vec![0u8; len];

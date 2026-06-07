@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 
-use bincode::{Decode, Encode};
 use crate::{IpcConnection, get_socket_name};
+use bincode::{Decode, Encode};
 
 pub struct IpcClient {
     conn: IpcConnection,
@@ -16,7 +16,13 @@ impl IpcClient {
             .connect_sync()?;
 
         // Handshake
-        let handshake = [b'L', b'C', b'C', crate::IPC_PROTOCOL_VERSION[0], crate::IPC_PROTOCOL_VERSION[1]];
+        let handshake = [
+            b'L',
+            b'C',
+            b'C',
+            crate::IPC_PROTOCOL_VERSION[0],
+            crate::IPC_PROTOCOL_VERSION[1],
+        ];
         stream.write_all(&handshake)?;
 
         let mut resp = [0u8; 5];
@@ -27,18 +33,25 @@ impl IpcClient {
         if &resp[0..3] == b"ERR" {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::ConnectionRefused,
-                format!("Daemon rejected connection: Version mismatch! Daemon is v{}.{}, Client is v{}.{}.{}. Please update.",
-                    daemon_major_ver, daemon_minor_ver,
-                    crate::IPC_PROTOCOL_VERSION[0], crate::IPC_PROTOCOL_VERSION[1], crate::IPC_PROTOCOL_VERSION[2]
-                )
+                format!(
+                    "Daemon rejected connection: Version mismatch! Daemon is v{}.{}, Client is v{}.{}.{}. Please update.",
+                    daemon_major_ver,
+                    daemon_minor_ver,
+                    crate::IPC_PROTOCOL_VERSION[0],
+                    crate::IPC_PROTOCOL_VERSION[1],
+                    crate::IPC_PROTOCOL_VERSION[2]
+                ),
             ));
         } else if &resp[0..3] != b"OKK" {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid IPC handshake"));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid IPC handshake",
+            ));
         }
 
         Ok(Self {
             conn: IpcConnection { stream },
-            daemon_version: (daemon_major_ver, daemon_minor_ver)
+            daemon_version: (daemon_major_ver, daemon_minor_ver),
         })
     }
 

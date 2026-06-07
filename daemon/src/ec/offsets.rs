@@ -49,7 +49,6 @@ pub struct EcOffsets {
     pub reg_kbd_custom_val: u16,
 
     // == LED Controller (Port A0 / PWM Engine) ==
-
     /// Port A0 Control (Switches pin to manual PWM mode)
     pub reg_gpdra: u16,
     /// Switches pin A0 to manual PWM mode

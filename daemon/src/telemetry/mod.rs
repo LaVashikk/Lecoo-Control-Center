@@ -1,10 +1,22 @@
-use std::{sync::{OnceLock, atomic::{AtomicBool, AtomicU64, Ordering}, mpsc::{Receiver, RecvTimeoutError, Sender}}, time::Duration};
+use std::{
+    sync::{
+        OnceLock,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        mpsc::{Receiver, RecvTimeoutError, Sender},
+    },
+    time::Duration,
+};
 
 use ipc::{TelemetryData, TelemetryPayload};
 
 use crate::ec;
 
-static TELEMETRY_INTERVAL: Duration = Duration::from_secs(300);
+/// Status poll interval when telemetry is enabled.
+const TELEMETRY_INTERVAL_ENABLED: Duration = Duration::from_secs(300);
+/// Wakeup interval when telemetry is disabled. Much longer to save power;
+/// the worker still wakes occasionally so that re-enabling takes effect promptly.
+const TELEMETRY_INTERVAL_DISABLED: Duration = Duration::from_secs(1800);
+
 static TELEMETRY_ENABLED: AtomicBool = AtomicBool::new(true);
 static TELEMETRY_TX: OnceLock<Sender<TelemetryData>> = OnceLock::new();
 static TELEMETRY_ID: AtomicU64 = AtomicU64::new(0);
@@ -23,10 +35,10 @@ pub fn init(start_enabled: bool, client_id: u64) {
 }
 
 pub fn send(data: TelemetryData) {
-    if is_enabled() {
-        if let Some(tx) = TELEMETRY_TX.get() {
-            let _ = tx.send(data);
-        }
+    if is_enabled()
+        && let Some(tx) = TELEMETRY_TX.get()
+    {
+        let _ = tx.send(data);
     }
 }
 
@@ -46,28 +58,29 @@ pub fn is_enabled() -> bool {
 
 fn worker_loop(rx: Receiver<TelemetryData>) {
     loop {
-        match rx.recv_timeout(TELEMETRY_INTERVAL) {
+        let interval = if is_enabled() {
+            TELEMETRY_INTERVAL_ENABLED
+        } else {
+            TELEMETRY_INTERVAL_DISABLED
+        };
+        match rx.recv_timeout(interval) {
             Ok(message) => {
                 if is_enabled() {
                     send_to_server(message);
                 }
             }
             Err(RecvTimeoutError::Timeout) => {
-                if is_enabled() {
-                    if let Some(ec) = crate::EC.get() {
-                        if let Ok(profile) = ec::read_power_profile(ec) {
-                            if let Ok((cpu_temp, sys_temp)) = ec::read_temperatures(ec) {
-                                if let Ok((cpu_rpm, gpu_rpm)) = ec::read_fans_rpm(ec) {
-                                    let status = TelemetryData::Status {
-                                        profile,
-                                        temps: [cpu_temp as u32, sys_temp as u32],
-                                        fans: [cpu_rpm as u32, gpu_rpm as u32],
-                                    };
-                                    send_to_server(status);
-                                }
-                            }
-                        }
-                    }
+                if is_enabled()
+                    && let Some(ec) = crate::EC.get()
+                    && let Ok((profile, cpu_temp, sys_temp, cpu_rpm, gpu_rpm)) =
+                        ec::read_status_snapshot(ec)
+                {
+                    let status = TelemetryData::Status {
+                        profile,
+                        temps: [cpu_temp as u32, sys_temp as u32],
+                        fans: [cpu_rpm as u32, gpu_rpm as u32],
+                    };
+                    send_to_server(status);
                 }
             }
             Err(RecvTimeoutError::Disconnected) => {
@@ -81,10 +94,7 @@ fn worker_loop(rx: Receiver<TelemetryData>) {
 fn send_to_server(data: TelemetryData) {
     let id = TELEMETRY_ID.load(Ordering::Relaxed);
 
-    let payload = TelemetryPayload {
-        id,
-        data
-    };
+    let payload = TelemetryPayload { id, data };
 
     let config = bincode::config::standard();
     let encoded_bytes = match bincode::encode_to_vec(&payload, config) {
@@ -100,7 +110,7 @@ fn send_to_server(data: TelemetryData) {
         .header("Content-Type", "application/octet-stream")
         .send(&encoded_bytes)
     {
-        Ok(_response) => {},
+        Ok(_response) => {}
         Err(e) => log::warn!("Failed to send telemetry: {}", e),
     }
 }

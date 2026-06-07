@@ -1,1 +1,5 @@
 /target
+
+# Loose release binaries at repo root (used by install.sh)
+/lecoo-ec-daemon
+/lecoo-ctrl

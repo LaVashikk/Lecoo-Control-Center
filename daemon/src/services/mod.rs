@@ -1,15 +1,15 @@
 #![allow(dead_code)]
 use std::{sync::mpsc::Sender, thread::JoinHandle};
 
-#[cfg(target_os = "windows")]
-pub mod win_service;
 #[cfg(target_os = "linux")]
 pub mod systemd_service;
-
 #[cfg(target_os = "windows")]
-pub use win_service::{init_logger, get_system_info, get_board_name};
+pub mod win_service;
+
 #[cfg(target_os = "linux")]
-pub use systemd_service::{init_logger, get_system_info, get_board_name};
+pub use systemd_service::{get_board_name, get_system_info, init_logger};
+#[cfg(target_os = "windows")]
+pub use win_service::{get_board_name, get_system_info, init_logger};
 
 #[derive(Debug, Clone, Copy)]
 pub enum InternalEvent {

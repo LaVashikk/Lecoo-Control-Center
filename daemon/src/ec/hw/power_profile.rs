@@ -1,12 +1,9 @@
-use ipc::{IpcResponse, PowerProfile};
-use anyhow::{Result, bail};
 use super::EcDevice;
+use anyhow::{Result, bail};
+use ipc::{IpcResponse, PowerProfile};
 
 pub fn apply_power_profile(ec: &EcDevice, profile: &PowerProfile) -> Result<IpcResponse> {
-    ec.write_ram(
-        ec.offsets.ram_power_profile,
-        *profile as u8
-    )?;
+    ec.write_ram(ec.offsets.ram_power_profile, *profile as u8)?;
     Ok(IpcResponse::Success)
 }
 

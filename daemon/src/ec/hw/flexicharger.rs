@@ -1,11 +1,13 @@
-use ipc::ChargeLimit;
-use anyhow::{Ok, Result};
 use super::EcDevice;
+use anyhow::{Ok, Result};
+use ipc::ChargeLimit;
 
 pub fn read_charge_limit(ec: &EcDevice) -> Result<(u8, u8)> {
-    let min = ec.read_ram(ec.offsets.ram_bat_limit_min)? as u8;
-    let max = ec.read_ram(ec.offsets.ram_bat_limit_max)? as u8;
-    Ok((min, max))
+    ec.with_batch(|b| {
+        let min = b.read_ram(b.offsets.ram_bat_limit_min)?;
+        let max = b.read_ram(b.offsets.ram_bat_limit_max)?;
+        Ok((min, max))
+    })
 }
 
 pub fn read_battery_rsoc(ec: &EcDevice) -> Result<u8> {

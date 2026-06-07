@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::sync::Mutex;
 
 #[cfg(target_os = "linux")]
@@ -40,11 +40,9 @@ impl EcDevice {
         // Probe for motherboard type
         if motherboard.contains("N155A") {
             log::info!("Detected motherboard N155A.");
-        }
-        else if motherboard.contains("N155C") {
+        } else if motherboard.contains("N155C") {
             log::info!("Detected motherboard N155C.");
-        }
-        else if motherboard.contains("N155D") {
+        } else if motherboard.contains("N155D") {
             log::info!("Detected motherboard N155D.");
             offsets = EcOffsets::DEFAULT_N155D;
         } else if !insecure_mode {
@@ -57,7 +55,7 @@ impl EcDevice {
             io: Mutex::new(io),
             port: 0,
             offsets,
-            hram_offset: 0xFF
+            hram_offset: 0xFF,
         };
 
         device.probe_chip(insecure_mode)?;
@@ -65,12 +63,17 @@ impl EcDevice {
         let possible_bases: [u16; 5] = [0xC400, 0xC000, 0x0400, 0x0000, 0xE000];
         for &base in &possible_bases {
             // A REALLY(!) weak heuristic for detecting HRAM window
-            if let Ok(temp) = device.read_reg(base + device.offsets.ram_temp_cpu) {
-                if temp > 0x10 && temp < 0x50 {
-                    device.hram_offset = base;
-                    log::info!("HRAM Window detected by offset: {:#06X}. Temp: {}", base, temp);
-                    break;
-                }
+            if let Ok(temp) = device.read_reg(base + device.offsets.ram_temp_cpu)
+                && temp > 0x10
+                && temp < 0x50
+            {
+                device.hram_offset = base;
+                log::info!(
+                    "HRAM Window detected by offset: {:#06X}. Temp: {}",
+                    base,
+                    temp
+                );
+                break;
             }
         }
 
@@ -98,7 +101,11 @@ impl EcDevice {
                     return Ok(()); // Successfully found IT5570
                 }
                 if chip_id == 0x81 || chip_id == 0x85 || chip_id == 0x89 || chip_id == 0x90 {
-                    log::warn!("Warning: Found chip ID {:#X} at port {:#X}", chip_id, self.port);
+                    log::warn!(
+                        "Warning: Found chip ID {:#X} at port {:#X}",
+                        chip_id,
+                        self.port
+                    );
                     log::warn!("Note: This chip may not be fully supported");
                     return Ok(());
                 }
@@ -107,7 +114,9 @@ impl EcDevice {
 
         if insecure_mode {
             log::warn!("ITE chip not detected on any known port.");
-            log::warn!("INSECURE MODE: Proceeding blindly. Interacting with unknown hardware may cause system instability or damage!");
+            log::warn!(
+                "INSECURE MODE: Proceeding blindly. Interacting with unknown hardware may cause system instability or damage!"
+            );
             Ok(())
         } else {
             bail!("ITE IT5570/IT8987 chip not found on any known port")

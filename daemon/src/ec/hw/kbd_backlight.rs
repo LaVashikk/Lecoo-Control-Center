@@ -1,20 +1,22 @@
-use ipc::KeyboardBacklightLevel;
-use anyhow::Result;
 use super::EcDevice;
+use anyhow::Result;
+use ipc::KeyboardBacklightLevel;
 
 pub fn read_keyboard_backlight(ec: &EcDevice) -> Result<KeyboardBacklightLevel> {
-    match ec.read_reg(ec.offsets.reg_kbd_backlight)? {
+    ec.with_batch(|b| match b.read_reg(b.offsets.reg_kbd_backlight)? {
         0x00 => Ok(KeyboardBacklightLevel::Off),
         0x01 => Ok(KeyboardBacklightLevel::Low),
         0x02 => Ok(KeyboardBacklightLevel::Medium),
         0x03 => Ok(KeyboardBacklightLevel::High),
         0xFF => {
-            let custom_value = ec.read_reg(ec.offsets.reg_kbd_custom_val)?;
+            let custom_value = b.read_reg(b.offsets.reg_kbd_custom_val)?;
             Ok(KeyboardBacklightLevel::Custom(custom_value))
         }
-
-        v => Err(anyhow::anyhow!("Invalid keyboard backlight level: {:#04x}", v)),
-    }
+        v => Err(anyhow::anyhow!(
+            "Invalid keyboard backlight level: {:#04x}",
+            v
+        )),
+    })
 }
 
 pub fn apply_keyboard_backlight(ec: &EcDevice, level: &KeyboardBacklightLevel) -> Result<()> {

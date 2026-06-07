@@ -144,7 +144,7 @@ enum CliLedAction {
     #[command(about = loc!("cmd_led_custom_about"))]
     Custom {
         #[arg(help = loc!("arg_led_val_help"))]
-        val: u8
+        val: u8,
     },
 }
 
@@ -207,8 +207,7 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     // Lazy connection with localized error context
-    let mut client = IpcClient::connect()
-        .with_context(|| loc!("err_daemon_connection"))?;
+    let mut client = IpcClient::connect().with_context(|| loc!("err_daemon_connection"))?;
 
     let request = match cli.command {
         Commands::Info => IpcRequest::GetSystemState,
@@ -219,12 +218,22 @@ fn main() -> anyhow::Result<()> {
             let update_rate = (rate.unwrap_or(1.0) * 1000.0) as u64;
             println!("{}", t!("msg_monitoring_start", rate = update_rate));
             loop {
-                let IpcResponse::Temp(cpu, system) = client.request(&IpcRequest::GetTemperatures)? else { unreachable!() };
-                let IpcResponse::FanRPM(cpu_fan, gpu_fan) = client.request(&IpcRequest::GetFansRPM)? else { unreachable!() };
+                let IpcResponse::Monitoring(cpu, system, cpu_fan, gpu_fan) =
+                    client.request(&IpcRequest::GetMonitoring)?
+                else {
+                    unreachable!()
+                };
 
-                print!("\r{}      ", t!("msg_monitoring_loop",
-                    cpu = cpu, sys = system, cpu_f = cpu_fan, gpu_f = gpu_fan
-                ));
+                print!(
+                    "\r{}      ",
+                    t!(
+                        "msg_monitoring_loop",
+                        cpu = cpu,
+                        sys = system,
+                        cpu_f = cpu_fan,
+                        gpu_f = gpu_fan
+                    )
+                );
                 io::stdout().flush().unwrap();
                 std::thread::sleep(std::time::Duration::from_millis(update_rate));
             }
@@ -240,7 +249,7 @@ fn main() -> anyhow::Result<()> {
                 };
                 IpcRequest::SetPowerProfile(power_p)
             }
-        }
+        },
 
         Commands::Fan { target, mode, val } => {
             let fan_m = match mode {
@@ -251,12 +260,12 @@ fn main() -> anyhow::Result<()> {
             let fan_idx = match target {
                 CliFanIndex::Cpu => FanIndex::Cpu,
                 CliFanIndex::Gpu => FanIndex::Gpu,
-                CliFanIndex::Both => {
-                    let _: IpcResponse = client.request(&IpcRequest::SetFanMode { fan: FanIndex::Cpu, mode: fan_m } )?;
-                    FanIndex::Gpu
-                },
+                CliFanIndex::Both => FanIndex::Both,
             };
-            IpcRequest::SetFanMode { fan: fan_idx, mode: fan_m }
+            IpcRequest::SetFanMode {
+                fan: fan_idx,
+                mode: fan_m,
+            }
         }
 
         Commands::Charge { limit } => match limit {
@@ -297,19 +306,25 @@ fn main() -> anyhow::Result<()> {
 
         Commands::Daemon { action } => match action {
             CliDaemonAction::Telemetry { telemetry_action } => match telemetry_action {
-                CliTelemetryAction::Enable => IpcRequest::DaemonCommand(DaemonCommand::ActivateTelemetry(true)),
-                CliTelemetryAction::Disable => IpcRequest::DaemonCommand(DaemonCommand::ActivateTelemetry(false)),
+                CliTelemetryAction::Enable => {
+                    IpcRequest::DaemonCommand(DaemonCommand::ActivateTelemetry(true))
+                }
+                CliTelemetryAction::Disable => {
+                    IpcRequest::DaemonCommand(DaemonCommand::ActivateTelemetry(false))
+                }
                 CliTelemetryAction::Id => IpcRequest::DaemonCommand(DaemonCommand::GetTelemetryId),
             },
             CliDaemonAction::Settings { settings_action } => match settings_action {
-                CliSettingsAction::Reset => IpcRequest::DaemonCommand(DaemonCommand::RestoreDefaults),
+                CliSettingsAction::Reset => {
+                    IpcRequest::DaemonCommand(DaemonCommand::RestoreDefaults)
+                }
                 CliSettingsAction::Read => IpcRequest::DaemonCommand(DaemonCommand::GetSettings),
                 CliSettingsAction::Apply => IpcRequest::DaemonCommand(DaemonCommand::ApplySettings),
             },
             CliDaemonAction::Version => {
                 println!("{}.{}", client.daemon_version.0, client.daemon_version.1);
                 std::process::exit(0);
-            },
+            }
         },
     };
 
@@ -319,7 +334,10 @@ fn main() -> anyhow::Result<()> {
         IpcResponse::Success => println!("{}", t!("msg_success")),
 
         IpcResponse::SystemInfo(chip, rev, offset, ver) => {
-            println!("{}", t!("resp_sys_info", chip = chip, rev = rev, offset = offset : {:04X}, ver = ver));
+            println!(
+                "{}",
+                t!("resp_sys_info", chip = chip, rev = rev, offset = offset : {:04X}, ver = ver)
+            );
         }
 
         IpcResponse::FanRPM(cpu, gpu) => {
@@ -328,6 +346,17 @@ fn main() -> anyhow::Result<()> {
 
         IpcResponse::Temp(cpu, sys) => {
             println!("{}", t!("resp_temps", cpu = cpu, sys = sys));
+        }
+
+        IpcResponse::Monitoring(_, _, _, _) => {
+            // The monitoring variant is only used inside the live-loop command,
+            // which never reaches this match (it handles the response inline).
+            // If somehow we get here, treat as an error.
+            eprintln!(
+                "{}",
+                t!("msg_error", msg = "Unexpected Monitoring response")
+            );
+            std::process::exit(1);
         }
 
         IpcResponse::KeyboardBacklight(lvl) => {
@@ -362,7 +391,7 @@ fn main() -> anyhow::Result<()> {
             DaemonResponse::Settings(s) => println!("{:#?}", s),
             DaemonResponse::TelemetryId(id) => {
                 println!("{}", t!("resp_telemetry_id", id = id : {:016X}));
-            },
+            }
         },
     }
 

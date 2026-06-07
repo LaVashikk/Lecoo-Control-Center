@@ -1,6 +1,6 @@
+use anyhow::{Context, Result};
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::FileExt;
-use anyhow::{Context, Result};
 
 pub struct RawPortIo {
     file: File,
@@ -18,7 +18,8 @@ impl RawPortIo {
 
     #[inline(always)]
     pub fn outb(&self, port: u16, val: u8) -> Result<()> {
-        self.file.write_at(&[val], port as u64)
+        self.file
+            .write_at(&[val], port as u64)
             .with_context(|| format!("outb failed at port {:#X}", port))?;
         Ok(())
     }
@@ -26,7 +27,8 @@ impl RawPortIo {
     #[inline(always)]
     pub fn inb(&self, port: u16) -> Result<u8> {
         let mut buf = [0u8; 1];
-        self.file.read_at(&mut buf, port as u64)
+        self.file
+            .read_at(&mut buf, port as u64)
             .with_context(|| format!("inb failed at port {:#X}", port))?;
         Ok(buf[0])
     }

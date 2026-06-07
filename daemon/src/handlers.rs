@@ -1,6 +1,12 @@
-use ipc::{ChargeLimit, CurrentSettings, DaemonCommand, DaemonResponse, FanIndex, FanMode, IpcRequest, IpcResponse, KeyboardBacklightLevel, PowerLedMode, PowerProfile};
+use crate::{
+    ec::{self, EcDevice},
+    telemetry,
+};
 use anyhow::{Context, Result, anyhow};
-use crate::{ec::{self, EcDevice}, telemetry};
+use ipc::{
+    ChargeLimit, CurrentSettings, DaemonCommand, DaemonResponse, FanIndex, FanMode, IpcRequest,
+    IpcResponse, KeyboardBacklightLevel, PowerLedMode, PowerProfile,
+};
 
 #[cfg(windows)]
 const STATE_PATH: &str = "C:\\ProgramData\\LecooControl\\daemon_state.bin";
@@ -10,13 +16,15 @@ const STATE_PATH: &str = "/var/lib/lecoo-control/daemon_state.bin";
 pub trait DaemonState: Sized {
     fn load() -> Result<Self>;
     fn load_or_default() -> Self;
-    fn save(&self) -> Result<()> ;
+    fn save(&self) -> Result<()>;
     fn restore_state(&self, ec: &EcDevice) -> Result<()>;
 }
 
 impl DaemonState for CurrentSettings {
     fn save(&self) -> Result<()> {
-        let dir = std::path::Path::new(STATE_PATH).parent().context("Invalid state path")?;
+        let dir = std::path::Path::new(STATE_PATH)
+            .parent()
+            .context("Invalid state path")?;
         std::fs::create_dir_all(dir)?;
 
         let file = std::fs::File::create(STATE_PATH)?;
@@ -34,11 +42,14 @@ impl DaemonState for CurrentSettings {
         let file = std::fs::File::open(STATE_PATH).context("Failed to open state file")?;
         let mut reader = std::io::BufReader::new(file);
 
-        bincode::decode_from_std_read(&mut reader, bincode::config::standard()).context("Failed decode state file!")
+        bincode::decode_from_std_read(&mut reader, bincode::config::standard())
+            .context("Failed decode state file!")
     }
 
     fn load_or_default() -> Self {
-        Self::load().map_err(|err| log::error!("Load state error: {}", err)).unwrap_or_default()
+        Self::load()
+            .map_err(|err| log::error!("Load state error: {}", err))
+            .unwrap_or_default()
     }
 
     fn restore_state(&self, ec: &EcDevice) -> Result<()> {
@@ -62,6 +73,8 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::GetFansRPM => get_fans_rpm(ec),
 
         IpcRequest::GetTemperatures => get_temperatures(ec),
+
+        IpcRequest::GetMonitoring => get_monitoring(ec),
 
         IpcRequest::GetChargeLimit => get_charge_limit(ec),
 
@@ -98,7 +111,7 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
             state.save()?;
             state.restore_state(ec)?;
             Ok(IpcResponse::Success)
-        },
+        }
 
         DaemonCommand::ActivateTelemetry(is_enabled) => {
             let mut state = get_state()?;
@@ -112,18 +125,22 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
                 telemetry::disable();
                 Ok(IpcResponse::TelemetryDisabledInfo)
             }
-        },
+        }
 
         DaemonCommand::ApplySettings => {
             let state = get_state()?;
-            state.restore_state(&ec)?;
+            state.restore_state(ec)?;
             Ok(IpcResponse::Success)
         }
-        DaemonCommand::GetSettings => Ok(IpcResponse::DaemonResponse(DaemonResponse::Settings(get_state()?.clone()))),
-        DaemonCommand::GetTelemetryId => Ok(IpcResponse::DaemonResponse(DaemonResponse::TelemetryId(get_state()?.telemetry_client_id))),
+        DaemonCommand::GetSettings => Ok(IpcResponse::DaemonResponse(DaemonResponse::Settings(
+            *get_state()?,
+        ))),
+        DaemonCommand::GetTelemetryId => Ok(IpcResponse::DaemonResponse(
+            DaemonResponse::TelemetryId(get_state()?.telemetry_client_id),
+        )),
 
         // todo: suspend/resume
-        _ => todo!()
+        _ => todo!(),
     }
 }
 
@@ -151,7 +168,12 @@ fn get_system_state(ec: &EcDevice) -> Result<IpcResponse> {
     let chip_name = format!("IT{:02X}{:02X}", chip_id1, chip_id2);
     let revision = format!("{:02X}", chip_ver);
 
-    Ok(IpcResponse::SystemInfo(chip_name, revision, ec.hram_offset, crate::VERSION.to_string()))
+    Ok(IpcResponse::SystemInfo(
+        chip_name,
+        revision,
+        ec.hram_offset,
+        crate::VERSION.to_string(),
+    ))
 }
 
 fn get_fans_rpm(ec: &EcDevice) -> Result<IpcResponse> {
@@ -162,6 +184,14 @@ fn get_fans_rpm(ec: &EcDevice) -> Result<IpcResponse> {
 fn get_temperatures(ec: &EcDevice) -> Result<IpcResponse> {
     let (cpu_temp, sys_temp) = ec::read_temperatures(ec)?;
     Ok(IpcResponse::Temp(cpu_temp, sys_temp))
+}
+
+fn get_monitoring(ec: &EcDevice) -> Result<IpcResponse> {
+    let (cpu_temp, sys_temp) = ec::read_temperatures(ec)?;
+    let (cpu_rpm, gpu_rpm) = ec::read_fans_rpm(ec)?;
+    Ok(IpcResponse::Monitoring(
+        cpu_temp, sys_temp, cpu_rpm, gpu_rpm,
+    ))
 }
 
 // Setters
@@ -176,7 +206,7 @@ pub fn get_state() -> Result<std::sync::MutexGuard<'static, CurrentSettings>> {
 }
 
 fn set_charge_limit(ec: &EcDevice, profile: &ChargeLimit) -> Result<IpcResponse> {
-    ec::apply_charge_limit(ec, &profile)?;
+    ec::apply_charge_limit(ec, profile)?;
     let mut state = get_state()?;
     state.charge_limit = *profile;
 
@@ -197,13 +227,17 @@ fn set_fan_mode(ec: &EcDevice, fan: &FanIndex, mode: &FanMode) -> Result<IpcResp
     match fan {
         FanIndex::Cpu => state.fan_mode_cpu = *mode,
         FanIndex::Gpu => state.fan_mode_gpu = *mode,
+        FanIndex::Both => {
+            state.fan_mode_cpu = *mode;
+            state.fan_mode_gpu = *mode;
+        }
     }
 
     Ok(IpcResponse::Success)
 }
 
 fn set_power_profile(ec: &EcDevice, profile: &PowerProfile) -> Result<IpcResponse> {
-    ec::apply_power_profile(ec, &profile)?;
+    ec::apply_power_profile(ec, profile)?;
     let mut state = get_state()?;
     state.power_profile = *profile;
 

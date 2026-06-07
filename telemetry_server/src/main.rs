@@ -1,7 +1,7 @@
 use bincode::config::standard;
-use ipc::{TelemetryData, TelemetryPayload, TelemetryDataV1, TelemetryPayloadV1};
+use ipc::{TelemetryData, TelemetryDataV1, TelemetryPayload, TelemetryPayloadV1};
 use log::{error, info, warn};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use simplelog::SimpleLogger;
 use std::{
     sync::{Arc, Mutex},
@@ -13,7 +13,8 @@ static SERVER_ADDR: &str = "127.0.0.1:8368";
 const MAX_BODY_SIZE: usize = 512 * 1024;
 
 fn main() {
-    SimpleLogger::init(log::LevelFilter::Info, simplelog::Config::default()).expect("Failed to initialize logger");
+    SimpleLogger::init(log::LevelFilter::Info, simplelog::Config::default())
+        .expect("Failed to initialize logger");
 
     let conn = Connection::open("telemetry.db").expect("Failed to open DB");
     conn.execute_batch("PRAGMA journal_mode = WAL;").unwrap();
@@ -28,7 +29,8 @@ fn main() {
             raw_data BLOB NOT NULL
         )",
         [],
-    ).expect("Failed to create raw table");
+    )
+    .expect("Failed to create raw table");
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS startup_events (
@@ -44,13 +46,11 @@ fn main() {
             FOREIGN KEY(raw_id) REFERENCES raw_telemetry(id)
         )",
         [],
-    ).expect("Failed to create startup_events table");
+    )
+    .expect("Failed to create startup_events table");
 
     // TODO: remove later
-    let _ = conn.execute(
-        "ALTER TABLE startup_events ADD COLUMN motherboard TEXT",
-        [],
-    );
+    let _ = conn.execute("ALTER TABLE startup_events ADD COLUMN motherboard TEXT", []);
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS status_events (
@@ -66,7 +66,8 @@ fn main() {
             FOREIGN KEY(raw_id) REFERENCES raw_telemetry(id)
         )",
         [],
-    ).expect("Failed to create status_events table");
+    )
+    .expect("Failed to create status_events table");
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS panic_events (
@@ -78,7 +79,8 @@ fn main() {
             FOREIGN KEY(raw_id) REFERENCES raw_telemetry(id)
         )",
         [],
-    ).expect("Failed to create panic_events table");
+    )
+    .expect("Failed to create panic_events table");
 
     let db = Arc::new(Mutex::new(conn));
 
@@ -98,7 +100,9 @@ fn main() {
                 return;
             }
 
-            let daemon_version = request.headers().iter()
+            let daemon_version = request
+                .headers()
+                .iter()
                 .find(|h| h.field.equiv("X-Daemon-Version"))
                 .map(|h| h.value.as_str().to_string())
                 .unwrap_or_else(|| "Unknown".to_string());
@@ -110,7 +114,8 @@ fn main() {
             }
 
             let mut buffer = Vec::with_capacity(content_length.min(MAX_BODY_SIZE));
-            if request.as_reader().read_to_end(&mut buffer).is_err() || buffer.len() > MAX_BODY_SIZE {
+            if request.as_reader().read_to_end(&mut buffer).is_err() || buffer.len() > MAX_BODY_SIZE
+            {
                 warn!("Failed to read request body");
                 let _ = request.respond(Response::empty(400));
                 return;
@@ -129,8 +134,7 @@ fn main() {
             }
 
             let raw_id = lock.last_insert_rowid();
-            let config = standard()
-                .with_limit::<{ 64 * 1024 }>();
+            let config = standard().with_limit::<{ 64 * 1024 }>();
 
             // Try to deserialize as V2 (new format with motherboard)
             match bincode::decode_from_slice::<TelemetryPayload, _>(&buffer, config) {
@@ -160,7 +164,10 @@ fn main() {
                     };
 
                     if let Err(e) = insert_result {
-                        error!("Failed to insert parsed telemetry V2 (Raw ID: {}): {}", raw_id, e);
+                        error!(
+                            "Failed to insert parsed telemetry V2 (Raw ID: {}): {}",
+                            raw_id, e
+                        );
                         let _ = request.respond(Response::empty(500));
                     } else {
                         let _ = request.respond(Response::empty(201));
@@ -195,7 +202,10 @@ fn main() {
                             };
 
                             if let Err(e) = insert_result {
-                                error!("Failed to insert parsed telemetry V1 (Raw ID: {}): {}", raw_id, e);
+                                error!(
+                                    "Failed to insert parsed telemetry V1 (Raw ID: {}): {}",
+                                    raw_id, e
+                                );
                                 let _ = request.respond(Response::empty(500));
                             } else {
                                 let _ = request.respond(Response::empty(201));
@@ -203,7 +213,10 @@ fn main() {
                         }
                         Err(e) => {
                             // Both V1 and V2 deserialization failed, but raw data is securely stored
-                            warn!("Deserialization failed for both V1 and V2. Raw ID: {}, Error: {}", raw_id, e);
+                            warn!(
+                                "Deserialization failed for both V1 and V2. Raw ID: {}, Error: {}",
+                                raw_id, e
+                            );
                             let _ = request.respond(Response::empty(202));
                         }
                     }

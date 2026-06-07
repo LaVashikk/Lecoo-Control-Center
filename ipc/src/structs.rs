@@ -21,7 +21,6 @@ pub enum DaemonCommand {
 pub enum DaemonResponse {
     Settings(CurrentSettings),
     TelemetryId(u64),
-
 }
 
 /// Represents the power profiles
@@ -68,9 +67,9 @@ impl std::fmt::Display for KeyboardBacklightLevel {
 /// Represents the fan control mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub enum FanMode {
-    Auto,           // Controlled by EC thermal tables
-    Full,           // 100% speed override (Turbo)
-    Custom(u8),     // Custom PWM duty cycle
+    Auto,       // Controlled by EC thermal tables
+    Full,       // 100% speed override (Turbo)
+    Custom(u8), // Custom PWM duty cycle
 }
 
 /// Identifies the specific fan
@@ -78,17 +77,19 @@ pub enum FanMode {
 pub enum FanIndex {
     Cpu = 0x4B,
     Gpu = 0x4D,
+    /// Both fans. Daemon handles dispatching to Cpu and Gpu.
+    Both = 0xFF,
 }
 
 /// Represents battery charge limit profiles (FlexiCharger)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub enum ChargeLimit {
-    FullCapacity,       // 100%
-    HighCapacity,       // 95%
-    Balanced,           // 80%
-    MaximumLifespan,    // 60%
-    DeskMode,           // 40%
-    // Custom(u8),  // TODO: too dangerous, I think?
+    FullCapacity,    // 100%
+    HighCapacity,    // 95%
+    Balanced,        // 80%
+    MaximumLifespan, // 60%
+    DeskMode,        // 40%
+                     // Custom(u8),  // TODO: too dangerous, I think?
 }
 impl ChargeLimit {
     pub fn as_percent(&self) -> (u8, u8) {
@@ -102,7 +103,8 @@ impl ChargeLimit {
         }
     }
 
-    pub fn from_predefined(min: u8, max: u8) -> Option<Self> { // todo: wait, oh fck this is bad..
+    pub fn from_predefined(min: u8, max: u8) -> Option<Self> {
+        // todo: wait, oh fck this is bad..
         if min > max {
             return None;
         }
@@ -125,7 +127,6 @@ pub enum PowerLedMode {
     Animation(BreathConfig),
 }
 
-
 /// Represents breathing animation brightness levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub enum BreathBrightness {
@@ -147,13 +148,13 @@ pub enum BreathStep {
 /// Represents breathing animation delay durations
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub enum BreathDelay {
-    Ms15 = 0x00,        // ~15.6 ms
-    Ms125 = 0x01,       // ~125 ms
-    Ms250 = 0x02,       // ~250 ms
-    Sec0_5 = 0x03,      // 0.5 sec
-    Sec1 = 0x04,        // 1.0 sec
-    Sec2 = 0x05,        // 2.0 sec
-    Sec4 = 0x06,        // 4.0 sec
+    Ms15 = 0x00,   // ~15.6 ms
+    Ms125 = 0x01,  // ~125 ms
+    Ms250 = 0x02,  // ~250 ms
+    Sec0_5 = 0x03, // 0.5 sec
+    Sec1 = 0x04,   // 1.0 sec
+    Sec2 = 0x05,   // 2.0 sec
+    Sec4 = 0x06,   // 4.0 sec
 }
 
 /// Represents breathing animation configuration
@@ -198,7 +199,7 @@ impl BreathConfig {
             max_brightness: BreathBrightness::Max75Percent,
             step_up: BreathStep::Instant,
             step_down: BreathStep::Instant,
-            delay_at_max: BreathDelay::Ms125 ,
+            delay_at_max: BreathDelay::Ms125,
             delay_at_min: BreathDelay::Ms125,
         }
     }
@@ -269,8 +270,8 @@ impl BreathConfig {
             max_brightness: BreathBrightness::Max100Percent,
             step_up: BreathStep::Instant,
             step_down: BreathStep::Instant,
-            delay_at_max: BreathDelay::Ms15,  // Minimum hardware delay
-            delay_at_min: BreathDelay::Ms15,  // Minimum hardware delay
+            delay_at_max: BreathDelay::Ms15, // Minimum hardware delay
+            delay_at_min: BreathDelay::Ms15, // Minimum hardware delay
         }
     }
 
@@ -341,9 +342,20 @@ impl Default for CurrentSettings {
 // V1: Old format without motherboard field (for backward compatibility)
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub enum TelemetryDataV1 {
-    Startup { firmware: String, offset: u16, cpu: String, os: String },
-    Status { profile: PowerProfile, temps: [u32; 2], fans: [u32; 2] },
-    Panic { error: String },
+    Startup {
+        firmware: String,
+        offset: u16,
+        cpu: String,
+        os: String,
+    },
+    Status {
+        profile: PowerProfile,
+        temps: [u32; 2],
+        fans: [u32; 2],
+    },
+    Panic {
+        error: String,
+    },
 }
 
 #[derive(Debug, Clone, Encode, Decode)]
@@ -355,9 +367,21 @@ pub struct TelemetryPayloadV1 {
 // V2: Current format with motherboard field
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub enum TelemetryData {
-    Startup { firmware: String, offset: u16, cpu: String, os: String, motherboard: String },
-    Status { profile: PowerProfile, temps: [u32; 2], fans: [u32; 2] },
-    Panic { error: String },
+    Startup {
+        firmware: String,
+        offset: u16,
+        cpu: String,
+        os: String,
+        motherboard: String,
+    },
+    Status {
+        profile: PowerProfile,
+        temps: [u32; 2],
+        fans: [u32; 2],
+    },
+    Panic {
+        error: String,
+    },
 }
 
 #[derive(Debug, Clone, Encode, Decode)]
