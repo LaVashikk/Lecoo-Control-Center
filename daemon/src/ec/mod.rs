@@ -47,6 +47,10 @@ impl EcDevice {
         else if motherboard.contains("N155D") {
             log::info!("Detected motherboard N155D.");
             offsets = EcOffsets::DEFAULT_N155D;
+        }
+        else if motherboard.contains("N161A") {
+            log::info!("Detected motherboard N161A.");
+            offsets = EcOffsets::DEFAULT_N161A;
         } else if !insecure_mode {
             // bail!("Unsupported motherboard: {}", motherboard);
             log::error!("Unsupported motherboard: {}", motherboard);
