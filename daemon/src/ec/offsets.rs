@@ -47,6 +47,7 @@ pub struct EcOffsets {
     // Keyboard Backlight
     pub reg_kbd_backlight: u16,
     pub reg_kbd_custom_val: u16,
+    pub kbd_backlight_pwm: bool,
 
     // == LED Controller (Port A0 / PWM Engine) ==
 
@@ -113,6 +114,7 @@ impl EcOffsets {
         // Absolute Regs (Keyboard)
         reg_kbd_backlight: 0x0F05,
         reg_kbd_custom_val: 0x1806,
+        kbd_backlight_pwm: false,
 
         // Absolute Regs (LED)
         reg_gpdra: 0x1601,
@@ -134,6 +136,15 @@ impl EcOffsets {
     pub const DEFAULT_N155D: Self = Self {
         ram_led_bypass: 0x4F, // or 0x50, 0x51, 0x54
         // The rest of the offsets remain the same as the default configuration
+        ..Self::DEFAULT_N155A
+    };
+
+    pub const DEFAULT_N161A: Self = Self {
+        // N161A keyboard backlight uses a direct PWM duty register:
+        // 0x00 = Off, 0x4C = Low, 0x99 = Medium, 0xFF = High.
+        reg_kbd_backlight: 0x1803,
+        reg_kbd_custom_val: 0x1803,
+        kbd_backlight_pwm: true,
         ..Self::DEFAULT_N155A
     };
 }
