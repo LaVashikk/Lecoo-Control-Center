@@ -3,7 +3,7 @@ use anyhow::Result;
 use super::EcDevice;
 
 pub fn read_keyboard_backlight(ec: &EcDevice) -> Result<KeyboardBacklightLevel> {
-    if ec.offsets.kbd_backlight_pwm {
+    if ec.offsets.kbd_backlight_pwm { // todo: improve this
         return match ec.read_reg(ec.offsets.reg_kbd_backlight)? {
             0x00 => Ok(KeyboardBacklightLevel::Off),
             0x4C => Ok(KeyboardBacklightLevel::Low),
@@ -30,7 +30,7 @@ pub fn read_keyboard_backlight(ec: &EcDevice) -> Result<KeyboardBacklightLevel> 
 pub fn apply_keyboard_backlight(ec: &EcDevice, level: &KeyboardBacklightLevel) -> Result<()> {
     let addr = ec.offsets.reg_kbd_backlight;
 
-    if ec.offsets.kbd_backlight_pwm {
+    if ec.offsets.kbd_backlight_pwm { // todo: improve this
         let value = match level {
             KeyboardBacklightLevel::Off => 0x00,
             KeyboardBacklightLevel::Low => 0x4C,
