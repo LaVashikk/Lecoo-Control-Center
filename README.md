@@ -39,8 +39,9 @@ This software is primarily developed and tested on the Lecoo Pro 14 (Lecoo N155)
 | Model | Motherboard Revision | EC Chip | Status |
 | :--- | :--- | :--- | :--- |
 | Lecoo Pro 14 Amd (H255) | N155A | IT5571-07 | Confirmed Working |
-| Lecoo Pro 14 Intel (Core Ultra 5) | N155D | IT5570-02 | Working, except the Power-LED control |
+| Lecoo Pro 14 Intel (Core Ultra 5) | N155D | IT5570-02 | Working |
 | Lecoo Pro 14 Intel (i5-13420H) | N155C | IT5570? | Probably Working |
+| Lecoo Pro 16 / N161A | N161A | IT5570-02 | Keyboard Backlight Only |
 
 **Note:** This software might theoretically work on other Emdoor-based laptops utilizing the ITE IT5570 or IT8987 Embedded Controllers, as the daemon includes basic HRAM offset auto-detection.
 

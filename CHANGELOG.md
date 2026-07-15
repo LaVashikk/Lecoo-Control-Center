@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.1] - 2026-07-15
+
+### Added
+- Added keyboard backlight support for the Lecoo N161A (IT5570-02) chassis. Note: battery charge limits and fan control for N161A are not yet supported.
+
 ## [0.4.0] - 2026-05-06
 
 ### Added

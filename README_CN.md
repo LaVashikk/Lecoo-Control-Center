@@ -41,6 +41,7 @@ CN [中文 Readme 在这](README_RU.md)
 | Lecoo Pro 14 Amd (H255) | N155A | IT5571-07 | 确认支持 |
 | Lecoo Pro 14 Intel (Core Ultra 5) | N155D | IT5570-02 | 支持除了电源LED控制以外的其他功能 |
 | Lecoo Pro 14 Intel (i5-13420H) | N155C | IT5570? | 可能支持 |
+| Lecoo Pro 16 / N161A | N161A | IT5570-02 | 仅支持键盘背光 |
 
 **注意：** 本软件理论上可能适用于其他使用ITE IT5570或IT8987嵌入式控制器的基于Emdoor的笔记本电脑，因为守护进程包含基本的HRAM偏移自动检测功能。
 
