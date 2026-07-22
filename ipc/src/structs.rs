@@ -117,6 +117,15 @@ impl ChargeLimit {
     }
 }
 
+/// N161A-specific, one-write native charge-hold status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
+pub enum NativeChargeHoldStatus {
+    Unsupported,
+    Normal { rsoc: u8 },
+    Holding { rsoc: u8 },
+    NativeProtection { rsoc: u8 },
+}
+
 /// Represents the LED Ring behavior
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
 pub enum PowerLedMode {

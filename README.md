@@ -41,7 +41,7 @@ This software is primarily developed and tested on the Lecoo Pro 14 (Lecoo N155)
 | Lecoo Pro 14 Amd (H255) | N155A | IT5571-07 | Confirmed Working |
 | Lecoo Pro 14 Intel (Core Ultra 5) | N155D | IT5570-02 | Working |
 | Lecoo Pro 14 Intel (i5-13420H) | N155C | IT5570? | Probably Working |
-| Lecoo Pro 16 / N161A | N161A | IT5570-02 | Keyboard Backlight Only |
+| Lecoo Pro 16 / N161A | N161A | IT5570-02 | Keyboard Backlight and experimental native charge control |
 
 **Note:** This software might theoretically work on other Emdoor-based laptops utilizing the ITE IT5570 or IT8987 Embedded Controllers, as the daemon includes basic HRAM offset auto-detection.
 
@@ -101,6 +101,18 @@ Here are the primary commands for `lecoo-ctrl`:
   * `lecoo-ctrl charge <full|high|balanced|lifespan|desk>` - Set battery charging thresholds (FlexiCharger).
       * *Example:* `lecoo-ctrl charge desk` (Limits charging to 40-50% for permanent AC usage).
       * Run `lecoo-ctrl charge` without arguments to view the current limit and battery capacity.
+      * LECOO N161A uses a separate native one-write hold mode instead of
+        FlexiCharger thresholds:
+        * `lecoo-ctrl charge hold` pauses charging at the current level while
+          RSOC is above 61% and below 85%. At 61% or below, use `native`.
+        * `lecoo-ctrl charge resume` restores the exact EC policy saved before
+          hold.
+        * `lecoo-ctrl charge native` experimentally arms the firmware-native
+          protection at or below 60% while the battery is actively charging.
+          The firmware then charges to approximately 75-76% and keeps the
+          battery near that level while AC remains connected.
+        * This mode performs no periodic EC writes and does not claim a
+          configurable start/stop percentage.
 
 ### Thermal Control
 

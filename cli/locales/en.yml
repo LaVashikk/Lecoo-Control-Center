@@ -63,6 +63,9 @@ arg_charge_limit_high_help: "High capacity (95%)"
 arg_charge_limit_balanced_help: "Balanced mode (80%)"
 arg_charge_limit_lifespan_help: "Maximum battery lifespan (60%)"
 arg_charge_limit_desk_help: "Desk mode (40%)"
+arg_charge_limit_hold_help: "N161A: pause charging at the current level (above 61% and below 85%)"
+arg_charge_limit_native_help: "N161A experimental: arm at or below 60%, then maintain approximately 75-76%"
+arg_charge_limit_resume_help: "N161A: restore normal charging"
 
 arg_charge_limit_long_help: |
   Set battery charge limit mode (FlexiCharger).
@@ -90,6 +93,11 @@ resp_charge_title: "🔋 Charge Limit (FlexiCharger):"
 resp_charge_full: "   Mode: Full Capacity (Charges to 100%)"
 resp_charge_range: "   Start charging at: %{min}%\n   Stop charging at:  %{max}%"
 resp_charge_current: "   Current Battery Charge: %{cur}%"
+resp_native_charge_title: "🔋 Charge Control (LECOO N161A Native Policy):"
+resp_native_charge_unsupported: "   Native hold is not supported on this motherboard. FlexiCharger profiles remain available."
+resp_native_charge_normal: "   Mode: Normal charging"
+resp_native_charge_holding: "   Mode: Holding at the current charge level"
+resp_native_charge_protection: "   Mode: Native battery protection (maintains approximately 75-76% on AC)"
 resp_power_title: "⚡ Power Profile:"
 resp_power_current: "   Current: %{prof}"
 resp_telemetry_disabled: |
