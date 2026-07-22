@@ -64,6 +64,7 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::GetTemperatures => get_temperatures(ec),
 
         IpcRequest::GetChargeLimit => get_charge_limit(ec),
+        IpcRequest::GetNativeChargeHold => get_native_charge_hold(ec),
 
         IpcRequest::GetPowerProfile => get_power_profile(ec),
 
@@ -77,6 +78,9 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::SetKeyboardBacklight(level) => set_keyboard_backlight(ec, level),
 
         IpcRequest::SetChargeLimit(limit) => set_charge_limit(ec, limit),
+        IpcRequest::EnableNativeChargeHold => enable_native_charge_hold(ec),
+        IpcRequest::EnableNativeChargeProtection => enable_native_charge_protection(ec),
+        IpcRequest::ResumeNativeCharging => resume_native_charging(ec),
 
         IpcRequest::SetLedMode(mode) => set_led_mode(ec, mode),
 
@@ -135,6 +139,14 @@ fn get_charge_limit(ec: &EcDevice) -> Result<IpcResponse> {
     Ok(IpcResponse::ChargeLimit(min, max, current))
 }
 
+fn get_native_charge_hold(ec: &EcDevice) -> Result<IpcResponse> {
+    let status = ec::read_native_charge_hold(ec)?;
+    if status == ipc::NativeChargeHoldStatus::Unsupported {
+        return get_charge_limit(ec);
+    }
+    Ok(IpcResponse::NativeChargeHold(status))
+}
+
 fn get_power_profile(ec: &EcDevice) -> Result<IpcResponse> {
     let profile = ec::read_power_profile(ec)?;
     Ok(IpcResponse::PowerLimit(profile))
@@ -176,10 +188,30 @@ pub fn get_state() -> Result<std::sync::MutexGuard<'static, CurrentSettings>> {
 }
 
 fn set_charge_limit(ec: &EcDevice, profile: &ChargeLimit) -> Result<IpcResponse> {
+    if ec.offsets.n161a_native_charge_hold {
+        return Err(anyhow!(
+            "FlexiCharger threshold profiles are not supported on N161A; use `lecoo-ctrl charge hold` or `lecoo-ctrl charge resume`"
+        ));
+    }
     ec::apply_charge_limit(ec, &profile)?;
     let mut state = get_state()?;
     state.charge_limit = *profile;
 
+    Ok(IpcResponse::Success)
+}
+
+fn enable_native_charge_hold(ec: &EcDevice) -> Result<IpcResponse> {
+    ec::enable_native_charge_hold(ec)?;
+    Ok(IpcResponse::Success)
+}
+
+fn enable_native_charge_protection(ec: &EcDevice) -> Result<IpcResponse> {
+    ec::enable_native_charge_protection(ec)?;
+    Ok(IpcResponse::Success)
+}
+
+fn resume_native_charging(ec: &EcDevice) -> Result<IpcResponse> {
+    ec::resume_native_charging(ec)?;
     Ok(IpcResponse::Success)
 }
 

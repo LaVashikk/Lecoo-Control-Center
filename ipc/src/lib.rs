@@ -30,6 +30,9 @@ pub enum IpcRequest {
     /// Get the current battery charge limit
     GetChargeLimit,
 
+    /// Get N161A native one-write charge-hold status.
+    GetNativeChargeHold,
+
     /// Get the current power profile
     GetPowerProfile,
 
@@ -50,6 +53,15 @@ pub enum IpcRequest {
 
     /// Set battery charge threshold
     SetChargeLimit(ChargeLimit),
+
+    /// Pause charging at the current RSOC on a supported N161A.
+    EnableNativeChargeHold,
+
+    /// Arm the N161A firmware's native protection at or below 60%.
+    EnableNativeChargeProtection,
+
+    /// Restore the exact EC policy byte saved before native hold.
+    ResumeNativeCharging,
 
     /// Control the LED Ring
     SetLedMode(PowerLedMode),
@@ -76,6 +88,9 @@ pub enum IpcResponse {
 
     /// Current battery charge limit (min/max percentages)
     ChargeLimit(u8, u8, u8),
+
+    /// N161A native one-write charge-hold status.
+    NativeChargeHold(NativeChargeHoldStatus),
 
     /// Current keyboard backlight brightness
     KeyboardBacklight(KeyboardBacklightLevel),

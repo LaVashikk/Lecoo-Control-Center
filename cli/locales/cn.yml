@@ -63,6 +63,9 @@ arg_charge_limit_high_help: "高容量（95%）"
 arg_charge_limit_balanced_help: "平衡模式（80%）"
 arg_charge_limit_lifespan_help: "最大电池寿命（60%）"
 arg_charge_limit_desk_help: "桌面模式（40%）"
+arg_charge_limit_hold_help: "N161A：在当前电量暂停充电（须高于61%且低于85%）"
+arg_charge_limit_native_help: "N161A 实验功能：在不高于60%时启用，随后维持在约75-76%"
+arg_charge_limit_resume_help: "N161A：恢复正常充电"
 
 arg_charge_limit_long_help: |
   设置电池充电限制模式（FlexiCharger）。
@@ -90,6 +93,11 @@ resp_charge_title: "🔋 充电限制 (FlexiCharger):"
 resp_charge_full: "   模式: 全容量（充电至100%）"
 resp_charge_range: "   开始充电: %{min}%\n   停止充电:  %{max}%"
 resp_charge_current: "   当前电池电量: %{cur}%"
+resp_native_charge_title: "🔋 充电控制（LECOO N161A 原生策略）："
+resp_native_charge_unsupported: "   当前主板不支持原生暂停；仍可使用 FlexiCharger 档位。"
+resp_native_charge_normal: "   模式：正常充电"
+resp_native_charge_holding: "   模式：维持当前电量"
+resp_native_charge_protection: "   模式：原生电池保护（插电时维持在约75-76%）"
 resp_power_title: "⚡ 电源配置:"
 resp_power_current: "   当前: %{prof}"
 resp_telemetry_disabled: |

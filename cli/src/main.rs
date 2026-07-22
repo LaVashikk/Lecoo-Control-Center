@@ -196,6 +196,12 @@ enum CliChargeLimit {
     Lifespan,
     #[value(help = loc!("arg_charge_limit_desk_help"))]
     Desk,
+    #[value(help = loc!("arg_charge_limit_hold_help"))]
+    Hold,
+    #[value(help = loc!("arg_charge_limit_native_help"))]
+    Native,
+    #[value(help = loc!("arg_charge_limit_resume_help"))]
+    Resume,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -261,16 +267,24 @@ fn main() -> anyhow::Result<()> {
 
         Commands::Charge { limit } => match limit {
             Some(cli_limit) => {
-                let ipc_limit = match cli_limit {
-                    CliChargeLimit::Full => ChargeLimit::FullCapacity,
-                    CliChargeLimit::High => ChargeLimit::HighCapacity,
-                    CliChargeLimit::Balanced => ChargeLimit::Balanced,
-                    CliChargeLimit::Lifespan => ChargeLimit::MaximumLifespan,
-                    CliChargeLimit::Desk => ChargeLimit::DeskMode,
-                };
-                IpcRequest::SetChargeLimit(ipc_limit)
+                match cli_limit {
+                    CliChargeLimit::Hold => IpcRequest::EnableNativeChargeHold,
+                    CliChargeLimit::Native => IpcRequest::EnableNativeChargeProtection,
+                    CliChargeLimit::Resume => IpcRequest::ResumeNativeCharging,
+                    other => {
+                        let ipc_limit = match other {
+                            CliChargeLimit::Full => ChargeLimit::FullCapacity,
+                            CliChargeLimit::High => ChargeLimit::HighCapacity,
+                            CliChargeLimit::Balanced => ChargeLimit::Balanced,
+                            CliChargeLimit::Lifespan => ChargeLimit::MaximumLifespan,
+                            CliChargeLimit::Desk => ChargeLimit::DeskMode,
+                            CliChargeLimit::Hold | CliChargeLimit::Native | CliChargeLimit::Resume => unreachable!(),
+                        };
+                        IpcRequest::SetChargeLimit(ipc_limit)
+                    }
+                }
             }
-            None => IpcRequest::GetChargeLimit,
+            None => IpcRequest::GetNativeChargeHold,
         },
 
         Commands::Kbd { mode, val } => match mode {
@@ -342,6 +356,27 @@ fn main() -> anyhow::Result<()> {
                 println!("{}", t!("resp_charge_range", min = min, max = max));
             }
             println!("{}", t!("resp_charge_current", cur = cur));
+        }
+
+        IpcResponse::NativeChargeHold(status) => {
+            println!("{}", t!("resp_native_charge_title"));
+            match status {
+                ipc::NativeChargeHoldStatus::Unsupported => {
+                    println!("{}", t!("resp_native_charge_unsupported"));
+                }
+                ipc::NativeChargeHoldStatus::Normal { rsoc } => {
+                    println!("{}", t!("resp_native_charge_normal"));
+                    println!("{}", t!("resp_charge_current", cur = rsoc));
+                }
+                ipc::NativeChargeHoldStatus::Holding { rsoc } => {
+                    println!("{}", t!("resp_native_charge_holding"));
+                    println!("{}", t!("resp_charge_current", cur = rsoc));
+                }
+                ipc::NativeChargeHoldStatus::NativeProtection { rsoc } => {
+                    println!("{}", t!("resp_native_charge_protection"));
+                    println!("{}", t!("resp_charge_current", cur = rsoc));
+                }
+            }
         }
 
         IpcResponse::PowerLimit(prof) => {

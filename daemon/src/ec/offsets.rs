@@ -34,6 +34,9 @@ pub struct EcOffsets {
     pub ram_bat_limit_min: u16,
     pub ram_bat_limit_max: u16,
 
+    /// N161A fixed native charge-policy state machine at absolute EC 0x0414.
+    pub n161a_native_charge_hold: bool,
+
     /// LED state override (0x00 = Auto, 0x01 = Custom/Bypass)
     pub ram_led_bypass: u16,
 
@@ -106,6 +109,7 @@ impl EcOffsets {
         ram_bat_rsoc: 0x93,
         ram_bat_limit_min: 0xBC,
         ram_bat_limit_max: 0xBB,
+        n161a_native_charge_hold: false,
 
         // Bypasses
         ram_led_bypass: 0x55,
@@ -145,6 +149,7 @@ impl EcOffsets {
         reg_kbd_backlight: 0x1803,
         reg_kbd_custom_val: 0x1803,
         kbd_backlight_pwm: true,
+        n161a_native_charge_hold: true,
         ..Self::DEFAULT_N155A
     };
 }
