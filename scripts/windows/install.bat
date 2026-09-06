@@ -12,6 +12,7 @@ set "SERVICE_DESC=Lecoo laptop EC hardware control daemon"
 set "DAEMON_EXE=lecoo-ec-daemon.exe"
 set "DAEMON_LIB=inpoutx64.dll"
 set "CTRL_EXE=lecoo-ctrl.exe"
+set "GUI_EXE=lecoo-control-center.exe"
 :: ============================================================
 
 :: ---- Request admin rights -----------------------------------
@@ -56,9 +57,15 @@ if not exist "%SRC%%CTRL_EXE%" (
     echo              Place this script next to the compiled binaries.
     goto :fail
 )
+if not exist "%SRC%%GUI_EXE%" (
+    echo       [FAIL] Not found: %SRC%%GUI_EXE%
+    echo              Place this script next to the compiled binaries.
+    goto :fail
+)
 echo       [OK] %DAEMON_EXE%
 echo       [OK] %DAEMON_LIB%
 echo       [OK] %CTRL_EXE%
+echo       [OK] %GUI_EXE%
 echo.
 
 :: ---- Step 2: Stop existing service if present ----------------
@@ -154,6 +161,13 @@ if !errorLevel! neq 0 (
     goto :fail
 )
 echo       [OK] %CTRL_EXE%
+
+copy /Y "%SRC%%GUI_EXE%" "%INSTALL_DIR%\%GUI_EXE%" >nul
+if !errorLevel! neq 0 (
+    echo       [FAIL] Cannot copy %GUI_EXE%
+    goto :fail
+)
+echo       [OK] %GUI_EXE%
 echo.
 
 :: ---- Step 6: Register and start service ----------------------
@@ -220,11 +234,13 @@ echo ============================================================
 echo   Service  : %SERVICE_NAME%
 echo   Location : %INSTALL_DIR%
 echo   CLI tool : %CTRL_EXE% (open a new terminal)
+echo   GUI      : %GUI_EXE%
 echo.
 echo   Useful commands:
 echo     sc query %SERVICE_NAME%
 echo     sc stop  %SERVICE_NAME%
 echo     sc start %SERVICE_NAME%
+echo     "%INSTALL_DIR%\%GUI_EXE%"
 echo ============================================================
 echo.
 goto :done

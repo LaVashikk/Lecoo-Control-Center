@@ -14,7 +14,7 @@ serde_json.workspace = true
 anyhow = "1.0"
 log = "0.4"
 ureq = "3.2.0"
-simplelog = "0.11"
+simplelog = "0.12"
 
 [target.'cfg(windows)'.dependencies]
 libloading = "0.9.0"

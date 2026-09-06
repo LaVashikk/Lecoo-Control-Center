@@ -145,11 +145,26 @@ jobs:
         env:
           REF_NAME: ${{ github.ref_name }}
         run: |
-          import json, pathlib, shutil, hashlib, os, sys
+          import json, pathlib, shutil, hashlib, os, subprocess, sys
 
           bundle  = json.loads(pathlib.Path("bundle.json").read_text())
           version = os.environ["REF_NAME"].lstrip("v")
           archive = bundle["archive"].replace("{version}", version)
+
+          # The Windows release is a pair of user-facing artifacts: a
+          # single-file Inno Setup installer and the existing portable ZIP.
+          # The packaging script produces both plus per-file SHA-256 files.
+          if bundle.get("installer", False):
+              subprocess.run(
+                  [
+                      "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                      "-File", "scripts/windows/package.ps1",
+                      "-Version", version,
+                      "-SkipBuild",
+                  ],
+                  check=True,
+              )
+              sys.exit(0)
 
           # Stage files
           staging = pathlib.Path("staging")
@@ -244,8 +259,10 @@ jobs:
           for b in config.get("bundles", []):
               if not b.get("enabled", True):
                   continue
-              a = b["archive"].replace("{version}", version)
-              body += f"| [{a}]({base}/{a}) | [SHA256]({base}/{a}.sha256) |\n"
+              artifacts = b.get("artifacts", [b["archive"]])
+              for artifact in artifacts:
+                  a = artifact.replace("{version}", version)
+                  body += f"| [{a}]({base}/{a}) | [SHA256]({base}/{a}.sha256) |\n"
 
           body += "\n"
 

@@ -57,10 +57,12 @@ CN [中文 Readme 在这](README_RU.md)
 
 #### Windows 安装
 
-1. 从发布页面下载 `lecoo-*-windows.zip` 压缩包。
-2. 将压缩包解压到任意文件夹。
-3. 右键点击 `install.bat` 并选择 **"以管理员身份运行"**。
-4. 打开新的终端窗口并运行 `lecoo-ctrl help` 以验证安装。
+1. 从发布页面下载推荐的 `Lecoo-Control-Center-*-Windows-x64-Setup.exe` 单文件安装程序。
+2. 以管理员身份运行。它会安装 GUI、CLI、`inpoutx64.dll`，并注册自动启动的 `LecooControlDaemon` Windows 服务。
+3. 从开始菜单启动 **Lecoo Control Center**；安装程序会同时创建标准 Windows 卸载入口。
+4. 如需离线/便携方式，下载 `Lecoo-Control-Center-*-Windows-x64.zip`，解压后以管理员身份运行 `install.bat`。
+
+本发布版尚未进行代码签名。请只从项目发布页下载，并在运行前核对随附的 SHA-256 校验文件。
 
 #### Linux 安装
 
@@ -117,7 +119,15 @@ CN [中文 Readme 在这](README_RU.md)
 
 ## GUI
 
-图形用户界面（GUI）目前正在开发中，将在未来版本中提供。
+`lecoo-control-center.exe` 是连接已安装 Lecoo 守护进程的原生、低占用图形控制中心。它会按当前硬件能力显示可用项目，并提供：
+
+  * CPU/系统温度、CPU/GPU 风扇转速、电池充电状态和性能档位的实时概览。
+  * 每个风扇的自动、全速、Turbo 和自定义 PWM 控制；Turbo 或 0-PWM 请求必须二次确认。
+  * 性能档位、电池保护、键盘背光和后部 LED 控制。
+  * 守护进程设置与可选遥测控制。
+  * 可选的当前 Windows 用户登录后启动，以及可显示、隐藏、退出程序的通知区域菜单。
+
+界面仅使用一条低频后台 IPC 线程刷新数据，空闲时不会持续渲染。登录后启动默认关闭，可在“设置”页启用；启用后会最小化到通知区域启动。GUI 的硬件操作与 CLI 一样会改变实际设置，请认真阅读确认提示。
 
 ## 遥测与数据收集
 

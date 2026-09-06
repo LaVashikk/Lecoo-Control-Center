@@ -21,6 +21,15 @@ pub use profile::*;
 pub(crate) const REG_CHIP_ID1: u16 = 0x2000;
 pub(crate) const REG_CHIP_ID2: u16 = 0x2001;
 pub(crate) const REG_CHIP_VER: u16 = 0x2002;
+const MIN_PLAUSIBLE_TEMPERATURE_C: u8 = 0x10;
+const MAX_PLAUSIBLE_TEMPERATURE_C: u8 = 110;
+
+/// Returns whether a raw CPU-temperature byte is credible enough to identify
+/// an HRAM window. This must include real high-load temperatures: N155A can
+/// legitimately exceed the former 80°C ceiling while the daemon starts.
+const fn is_plausible_temperature(value: u8) -> bool {
+    value > MIN_PLAUSIBLE_TEMPERATURE_C && value <= MAX_PLAUSIBLE_TEMPERATURE_C
+}
 
 pub struct EcDevice {
     /// Mutex wraps the low-level I/O backend.
@@ -90,9 +99,11 @@ impl EcDevice {
         let mut candidates = Vec::new();
         for &base in self.profile.hram_candidates {
             if let Ok(t) = self.read_abs(base + temp) {
-                // A REALLY(!) weak heuristic for detecting HRAM window
-                // TOOD: use a real cpuid op for real temp value!
-                if t > 0x10 && t < 0x50 {
+                // A deliberately conservative read-only heuristic for
+                // detecting the HRAM window. It follows the same 1–110°C
+                // sanity range used by telemetry, rather than rejecting a
+                // valid high-load CPU temperature above 80°C.
+                if is_plausible_temperature(t) {
                     candidates.push(base);
                 }
             }
@@ -148,6 +159,22 @@ impl EcDevice {
 
     pub(crate) fn read_abs(&self, addr: u16) -> Result<u8> {
         self.with_batch(|b| b.read_abs(addr))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_plausible_temperature;
+
+    #[test]
+    fn hram_temperature_heuristic_accepts_safe_high_load_values() {
+        assert!(!is_plausible_temperature(0x10));
+        assert!(is_plausible_temperature(0x11));
+        assert!(is_plausible_temperature(80));
+        assert!(is_plausible_temperature(89));
+        assert!(is_plausible_temperature(110));
+        assert!(!is_plausible_temperature(111));
+        assert!(!is_plausible_temperature(u8::MAX));
     }
 }
 

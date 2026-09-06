@@ -7,6 +7,21 @@ repository.workspace = true
 license.workspace = true
 edition = "2024"
 
+[[bin]]
+name = "lecoo-control-center"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = "1.0"
 ipc = { path = "../ipc" }
+lecoo-types.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+eframe = { version = "0.27.2", default-features = false, features = ["glow"] }
+raw-window-handle = "0.6"
+tray-icon = { version = "0.24.2", default-features = false }
+winreg = "0.56.0"
+windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+eframe = { version = "0.27.2", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"] }

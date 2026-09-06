@@ -57,10 +57,12 @@ If you successfully run this on an unlisted hardware revision or a different Emd
 
 #### Windows Installation
 
-1. Download the `lecoo-*-windows.zip` archive from the releases page.
-2. Extract the archive to any folder.
-3. Right-click on `install.bat` and select **"Run as Administrator"**.
-4. Open a new terminal window and run `lecoo-ctrl help` to verify installation.
+1. Download the recommended `Lecoo-Control-Center-*-Windows-x64-Setup.exe` installer from the releases page.
+2. Run it as an administrator. It installs the GUI, CLI, `inpoutx64.dll`, and the automatic `LecooControlDaemon` Windows service.
+3. Launch **Lecoo Control Center** from the Start menu. The installer also creates a standard Windows uninstall entry.
+4. For an offline/portable alternative, download `Lecoo-Control-Center-*-Windows-x64.zip`, extract it, then run `install.bat` as an administrator.
+
+The installer is not code-signed in this release. Download only from the project release page and verify the published SHA-256 file before running it.
 
 #### Linux Installation
 
@@ -117,7 +119,15 @@ Here are the primary commands for `lecoo-ctrl`:
 
 ## GUI
 
-A Graphical User Interface (GUI) is currently in development and will be available in a future release.
+`lecoo-control-center.exe` is a native, low-overhead control center for the installed Lecoo daemon. It shows only the features reported by the current hardware and includes:
+
+  * Live CPU/system temperatures, CPU/GPU fan RPM, battery charge state, and active performance profile.
+  * Per-fan Auto, Full, Turbo, and custom PWM controls, with a confirmation before a Turbo or 0-PWM request.
+  * Power profile, battery-preservation, keyboard-backlight, and rear-LED controls.
+  * Daemon settings and optional telemetry controls.
+  * Optional sign-in startup for the current Windows user, plus a notification-area menu to show, hide, or exit the GUI.
+
+The GUI refreshes telemetry on one low-frequency background IPC thread and does not continuously render while idle. Sign-in startup is off by default and can be enabled from **Settings**; it starts the GUI minimized to the notification area. Its hardware actions change the same physical settings as the CLI; use the confirmation dialogs carefully.
 
 ## Telemetry & Data Collection
 

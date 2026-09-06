@@ -1,6 +1,6 @@
 use std::io;
 
-use interprocess::local_socket::{Listener, ListenerOptions, prelude::*};
+use interprocess::local_socket::{GenericNamespaced, Listener, ListenerOptions, ToNsName, prelude::*};
 
 use crate::{DaemonWorker, get_socket_name};
 
@@ -11,7 +11,19 @@ pub struct IpcServer {
 impl IpcServer {
     /// Binds the server and sets access permissions
     pub fn bind() -> io::Result<Self> {
-        let name = get_socket_name()?;
+        Self::bind_with_name(get_socket_name()?)
+    }
+
+    /// Binds an isolated caller-supplied local socket name.
+    ///
+    /// The production daemon uses [`Self::bind`]; this variant supports
+    /// integration tests without colliding with an installed service.
+    pub fn bind_to(name: &str) -> io::Result<Self> {
+        let name = name.to_ns_name::<GenericNamespaced>().map(|name| name.into_owned())?;
+        Self::bind_with_name(name)
+    }
+
+    fn bind_with_name(name: interprocess::local_socket::Name<'static>) -> io::Result<Self> {
         let mut options = ListenerOptions::new().name(name);
 
         #[cfg(windows)]

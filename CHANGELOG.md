@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.2-beta] - 2026-09-06
+
+### Added
+- Added the native low-overhead Windows control center with optional sign-in startup and notification-area controls.
+- Added a Windows x64 single-file installer, portable ZIP, per-artifact SHA-256 checksums, Start menu entries, and standard uninstallation.
+- Bundled the GUI, CLI, EC daemon, `inpoutx64.dll`, and automatic `LecooControlDaemon` service registration into the Windows release flow.
+
+### Fixed
+- Allowed valid high-load CPU temperatures through the read-only HRAM window detection heuristic so the N155A service can start above 80°C.
+
 ## [0.4.1] - 2026-07-15
 
 ### Added

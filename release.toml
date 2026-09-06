@@ -10,9 +10,10 @@ This software interacts directly with your system's hardware. **Use at your own 
 ### 🛠️ How to Install
 
 **Windows:**
-1. Download the `*-windows.zip` archive below and extract it to a folder.
-2. Right-click on `install.bat` and select **"Run as Administrator"**.
-3. Open a *new* terminal window and type `lecoo-ctrl help`.
+1. Download the `*-Windows-x64-Setup.exe` installer below and run it as Administrator.
+2. It installs the GUI, CLI, hardware DLL, and automatic `LecooControlDaemon` Windows service.
+3. Launch **Lecoo Control Center** from the Start menu. The `*-Windows-x64.zip` archive remains available for portable/offline installation via `install.bat`.
+4. Verify the adjacent SHA-256 file before running an unsigned installer.
 
 **Linux:**
 1. Download the `*-linux.tar.gz` archive and extract it.
@@ -29,16 +30,23 @@ This software interacts directly with your system's hardware. **Use at your own 
 id      = "windows"
 enabled = true
 runner  = "windows-latest"
-archive = "lecoo-{version}-windows.zip"
+archive = "Lecoo-Control-Center-{version}-Windows-x64.zip"
+installer = true
+artifacts = [
+    "Lecoo-Control-Center-{version}-Windows-x64-Setup.exe",
+    "Lecoo-Control-Center-{version}-Windows-x64.zip",
+]
 
 rust_targets = ["x86_64-pc-windows-msvc"]
 
-setup = []
+setup = [
+    "choco install innosetup --no-progress -y",
+]
 
 build = [
     "cargo build --release --target x86_64-pc-windows-msvc -p lecoo-ec-daemon",
     "cargo build --release --target x86_64-pc-windows-msvc -p lecoo-ctrl",
-    # "cargo build --release --target x86_64-pc-windows-msvc -p lecoo-gui",
+    "cargo build --release --target x86_64-pc-windows-msvc -p gui",
 ]
 
 [[bundles.files]]
@@ -48,6 +56,10 @@ dst = "lecoo-ec-daemon.exe"
 [[bundles.files]]
 src = "target/x86_64-pc-windows-msvc/release/lecoo-ctrl.exe"
 dst = "lecoo-ctrl.exe"
+
+[[bundles.files]]
+src = "target/x86_64-pc-windows-msvc/release/lecoo-control-center.exe"
+dst = "lecoo-control-center.exe"
 
 [[bundles.files]]
 src = "libs/inpoutx64.dll"

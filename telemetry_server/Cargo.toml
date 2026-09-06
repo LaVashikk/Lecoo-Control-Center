@@ -23,5 +23,5 @@ serde_json.workspace = true
 clap = { version = "4", features = ["derive"] }
 # Only to read the pre-0.6 wire format, see src/legacy.rs
 bincode = "2.0"
-simplelog = "0.11"
+simplelog = "0.12"
 log = "0.4"
