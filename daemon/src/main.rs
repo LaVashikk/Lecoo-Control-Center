@@ -177,7 +177,13 @@ fn main() -> Result<()> {
     let device = match resolve_profile(&args, &board) {
         Some((profile, forced)) => {
             log::info!("Detected motherboard {}.", profile.id);
-            Some((ec::EcDevice::new_with_profile(profile, insecure_mode)?, forced))
+            match ec::EcDevice::new_with_profile(profile, insecure_mode) {
+                Ok(ec) => Some((ec, forced)),
+                Err(e) => {
+                    log::error!("Failed to initialize EC device: {e:#}");
+                    return Err(e);
+                }
+            }
         }
         None => {
             if insecure_mode {
