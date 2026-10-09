@@ -117,7 +117,22 @@ Here are the primary commands for `lecoo-ctrl`:
 
 ## GUI
 
-A Graphical User Interface (GUI) is currently in development and will be available in a future release.
+An official Graphical User Interface (GUI) is currently under active development and will be included in a future release.
+
+<img src="branding/gui_proto.jpg" alt="Lecoo Control Center GUI Prototype" width=60% >
+
+### Third-Party & Community GUIs
+
+Several unofficial community-developed GUI frontends have emerged over time. They can serve as alternatives to the upcoming official GUI, and currently represent the only available graphical options.
+
+> [!WARNING]
+> Third-party GUIs are developed independently. The author of this repository does not maintain, audit, or take responsibility for third-party software, binaries, or external forks. Use them at your own risk and inspect the code before execution.
+
+Developers of third-party GUIs are welcome to submit a Pull Request to list their project below:
+
+| Project | Author | Platform | Tech Stack | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| *[Submit your GUI](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | — | Windows / Linux | — | Open a PR to add your GUI frontend. Because im lazy do it myself ;p |
 
 ## Telemetry & Data Collection
 
@@ -173,10 +188,8 @@ This project is open-source and licensed under the MIT License. See the [LICENSE
 
 If you find this tool useful and want to support its continued development, consider buying me a coffee (or a beer, who knows, lol)!
 
-* **International:** [Donate via Lava.top](https://app.lava.top/lavashik?tabId=donate)
 * **Russia:** [Donate via CloudTips](https://pay.cloudtips.ru/p/7e960f26)
-* **China:** [Alipay](branding/alipay.jpg)
 * **Cryptocurrency:**
-  * **SOL (Solana):** `CvbAT3VduADYyGRBZDq5CD3kLYcYYjYjFzgWFftsbgAB`
+  * **TRON (TRX native):** `THiCBSdGtnW3LVvfqq7dnr5ddmLcVQKGg7`
   * **ETH (ERC-20):** `0x44B03F26B4dc7b8AcBBCFc456e4181872386a8D8`
   * **BTC (Native Segwit):** `bc1q3sej9r9v9syamjanq7mg6a7002pc4m6d6qnv6k`

@@ -117,7 +117,22 @@ CN [中文 Readme 在这](README_RU.md)
 
 ## GUI
 
-图形用户界面（GUI）目前正在开发中，将在未来版本中提供。
+官方图形用户界面（GUI）目前正在积极开发中，并将在未来的版本中推出。
+
+<img src="branding/gui_proto.jpg" alt="Lecoo Control Center GUI Prototype" width=60% >
+
+### 第三方与社区 GUI
+
+随着项目的发展，社区中涌现出了几款非官方的 GUI 前端。它们可以作为官方界面的替代方案，并且在官方 GUI 发布之前，是目前唯一的图形界面选择。
+
+> [!WARNING]
+> 第三方 GUI 均由社区独立开发。本项目作者不对第三方软件、编译二进制文件或外部分支负责，也不对其进行维护或审计。使用风险自负，请在运行前仔细检查源代码。
+
+欢迎第三方 GUI 开发者提交 Pull Request 将自己的项目添加到下表中：
+
+| 项目 | 作者 | 平台 | 技术栈 | 特性 / 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| *[添加你的项目](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | — | Windows / Linux | — | 提交 PR 添加您的 GUI 前端 |
 
 ## 遥测与数据收集
 
@@ -173,10 +188,8 @@ cargo build-ctrl-linux  # 构建CLI客户端
 
 如果您发现此工具有用并希望支持其持续开发，请考虑请我喝杯咖啡（或啤酒，谁知道呢，哈哈）！
 
-* **国际：** [通过Lava.top捐赠](https://app.lava.top/lavashik?tabId=donate)
 * **俄罗斯：** [通过CloudTips捐赠](https://pay.cloudtips.ru/p/7e960f26)
-* **中国：** [支付宝](branding/alipay.jpg)
 * **加密货币：**
-  * **SOL (Solana)：** `CvbAT3VduADYyGRBZDq5CD3kLYcYYjYjFzgWFftsbgAB`
+  * **TRON (TRX native):** `THiCBSdGtnW3LVvfqq7dnr5ddmLcVQKGg7`
   * **ETH (ERC-20)：** `0x44B03F26B4dc7b8AcBBCFc456e4181872386a8D8`
   * **BTC (Native Segwit)：** `bc1q3sej9r9v9syamjanq7mg6a7002pc4m6d6qnv6k`
