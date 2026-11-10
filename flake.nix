@@ -3,15 +3,31 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { self, nixpkgs }:
+    {
+      self,
+      nixpkgs,
+      rust-overlay,
+    }:
+
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      overlays = [ rust-overlay.overlays.default ];
+      pkgs = import nixpkgs { inherit system overlays; };
 
-      lecoo-control-center = pkgs.rustPlatform.buildRustPackage {
+      rustToolchain = pkgs.rust-bin.stable.latest.default;
+
+      rustPlatform = pkgs.makeRustPlatform {
+        cargo = rustToolchain;
+        rustc = rustToolchain;
+      };
+      lecoo-control-center = rustPlatform.buildRustPackage {
         pname = "lecoo-control-center";
         version = "0.5.2-beta";
 
@@ -19,10 +35,10 @@
 
         cargoLock.lockFile = ./Cargo.lock;
 
-        RUSTFLAGS = "-C target-cpu=native";
+        # RUSTFLAGS = "-C target-cpu=native";
 
-        preferLocalBuild = true;
-        allowSubstitutes = false;
+        # preferLocalBuild = true;
+        # allowSubstitutes = false;
 
         cargoBuildFlags = [
           "-p"
@@ -68,6 +84,16 @@
         default = lecoo-control-center;
         lecoo-control-center = lecoo-control-center;
       };
+
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [
+          rustToolchain
+          pkgs.pkg-config
+          pkgs.rust-analyzer
+        ];
+        RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+      };
+
       nixosModules.default = import ./nixos-module.nix {
         package = lecoo-control-center;
       };
