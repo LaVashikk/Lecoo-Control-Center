@@ -133,6 +133,14 @@ impl EcDevice {
         self.with_batch(|b| b.read(addr))
     }
 
+    pub fn read_u16_le(&self, addr: Addr) -> Result<u16> {
+        self.with_batch(|b| b.read_u16_le(addr))
+    }
+
+    pub fn read_u16_be(&self, addr: Addr) -> Result<u16> {
+        self.with_batch(|b| b.read_u16_be(addr))
+    }
+
     pub fn write(&self, addr: Addr, val: u8) -> Result<()> {
         self.with_batch(|b| b.write(addr, val))
     }
@@ -232,6 +240,20 @@ impl<'a> EcBatch<'a> {
 
     pub fn read_abs(&self, addr: u16) -> Result<u8> {
         raw_read(&self.io, self.rt.port, addr)
+    }
+
+    pub fn read_u16_le(&self, addr: Addr) -> Result<u16> {
+        let base = self.resolve(addr);
+        let b0 = self.read_abs(base)?;
+        let b1 = self.read_abs(base + 1)?;
+        Ok(u16::from_le_bytes([b0, b1]))
+    }
+
+    pub fn read_u16_be(&self, addr: Addr) -> Result<u16> {
+        let base = self.resolve(addr);
+        let b0 = self.read_abs(base)?;
+        let b1 = self.read_abs(base + 1)?;
+        Ok(u16::from_be_bytes([b0, b1]))
     }
 
     /// Writes a single byte to the specified EC absolute register address.
