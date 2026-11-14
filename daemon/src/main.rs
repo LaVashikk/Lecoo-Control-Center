@@ -12,6 +12,7 @@ use crate::handlers::DaemonState;
 
 pub mod ec;
 mod handlers;
+mod metrics;
 mod services;
 mod telemetry;
 
@@ -245,6 +246,8 @@ fn main() -> Result<()> {
             process_service(rx_in_core);
         })
         .expect("failed to spawn daemon-service-listener");
+
+    metrics::start();
 
     serve_forever(server.context("Failed to bind IPC server")?);
 }

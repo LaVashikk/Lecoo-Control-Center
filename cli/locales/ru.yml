@@ -22,6 +22,7 @@ arg_led_flash_help: "Проиграть пресет один раз (по ум�
 arg_led_for_help: "Сколько секунд длится `flash` (по умолчанию 1.5)"
 cmd_daemon_telemetry_about: "Управление настройками телеметрии"
 cmd_daemon_settings_about: "Управление внутренними настройками службы"
+cmd_daemon_overheat_about: "Мигать кольцом, пока процессор перегрет (`on` = 95 °C)"
 cmd_daemon_version_about: "Показать версию фоновой службы"
 cmd_telemetry_enable_about: "Включить сбор телеметрии"
 cmd_telemetry_disable_about: "Отключить сбор телеметрии"
@@ -129,6 +130,8 @@ resp_telemetry_disabled: |
   🔗 Анонимная телеметрия отключена. Отчеты помогают улучшать качество проекта.
   Пожалуйста, включите ее - это бесплатно и полностью анонимно :)
 resp_telemetry_id: "🔗 ID телеметрии: 0x%{id}"
+resp_overheat_on: "🌡️ Сигнал перегрева: включён, порог %{c} °C"
+resp_overheat_off: "🌡️ Сигнал перегрева: выключен"
 
 # Help Labels
 help_usage: "Использование:"

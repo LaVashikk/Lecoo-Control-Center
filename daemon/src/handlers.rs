@@ -101,6 +101,15 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::GetKeyboardBacklight => get_keyboard_backlight(ec),
         IpcRequest::GetChargeStatus => get_charge_status(ec),
         IpcRequest::GetBatteryInfo => get_battery_info(ec),
+        // todo: `since` once there is history to page through, for now it's always the latest sample
+        IpcRequest::GetMetrics { live, since: _ } => {
+            // todo: move to func
+            if *live { crate::metrics::watch(); }
+            crate::metrics::METRICS
+                .lock()
+                .map(|m| IpcResponse::Metrics(m.clone()))
+                .map_err(|_| anyhow!("Metrics lock poisoned"))
+        }
 
         // SETTERS:
         IpcRequest::SetPowerProfile(profile) => set_power_profile(ec, profile),
@@ -157,6 +166,10 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
         DaemonCommand::GetTelemetryId => Ok(IpcResponse::TelemetryId(get_state()?.telemetry_client_id)),
         DaemonCommand::GetCapabilities => {
             Ok(IpcResponse::Capabilities(Box::new(ec.profile.caps(crate::VERSION))))
+        }
+        DaemonCommand::SetOverheatAlert(c) => {
+            get_state()?.overheat_alert_c = *c;
+            Ok(IpcResponse::Success)
         }
         DaemonCommand::SetLedOnSleep(mode) => {
             get_state()?.led_on_sleep = *mode;

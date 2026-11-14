@@ -13,6 +13,7 @@
 //! a completely dynamic `--help` output that actually matches the user's hardware.
 
 use lecoo_types::caps::Capabilities;
+use lecoo_types::settings::OVERHEAT_DEFAULT_C;
 use lecoo_types::ec_types::{
     BreathConfig, ChargeIntent, ChargeRange, FanMode, KeyboardBacklightLevel, PowerLedMode, PowerProfile,
 };
@@ -32,6 +33,9 @@ pub enum DaemonSubcommand {
     SettingsReset,
     SettingsRead,
     SettingsApply,
+    /// None turns the alarm off
+    Overheat(Option<u8>),
+    OverheatStatus,
     Version,
 }
 
@@ -292,6 +296,12 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
                         ),
                     }
                 }
+                "overheat" => match args.get(1).map(|a| a.to_lowercase()).as_deref() {
+                    None => DaemonSubcommand::OverheatStatus,
+                    Some("on") => DaemonSubcommand::Overheat(Some(OVERHEAT_DEFAULT_C)),
+                    Some("off") => DaemonSubcommand::Overheat(None),
+                    Some(_) => DaemonSubcommand::Overheat(Some(parse_int_arg(&args, 1, "[on|off|°C]", &cmd_ctx)?)),
+                },
                 "settings" => {
                     let action = args.get(1).ok_or_else(|| ParseError {
                         message: t!("err_missing_args", args = "  <reset|read|apply>").into(),

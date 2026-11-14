@@ -1,5 +1,5 @@
 use interprocess::local_socket::{GenericNamespaced, Stream, ToNsName};
-use lecoo_types::{caps::*, ec_types::*, settings::CurrentSettings};
+use lecoo_types::{caps::*, ec_types::*, metrics::Metrics, settings::CurrentSettings};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{
     io::{self, Read, Write},
@@ -30,6 +30,8 @@ pub enum DaemonCommand {
     ActivateTelemetry(bool),
     /// What the LED Ring shows while the system sleeps. Only stored, the sleep handler applies it
     SetLedOnSleep(PowerLedMode),
+    /// CPU °C that turns on the LED alarm, None turns the feature off
+    SetOverheatAlert(Option<u8>),
 
     /// Raw byte at an absolute EC address
     Read(u16),
@@ -56,6 +58,8 @@ pub enum IpcRequest {
     GetTemperatures,
     GetChargeStatus,
     GetBatteryInfo,
+    /// Latest snapshot from the daemon's metrics tick
+    GetMetrics,
     /// TODO: LEGACY api for reading charge limit
     GetChargeLimit,
     GetPowerProfile,
@@ -122,6 +126,7 @@ pub enum IpcResponse {
     },
 
     BatteryInfo(BatteryInfo),
+    Metrics(Metrics),
 
     /// Current battery charge status
     ChargeStatus(ChargeStatus),

@@ -22,6 +22,7 @@ arg_led_flash_help: "Play a preset once (default: alert), then return to the cur
 arg_led_for_help: "How long `flash` plays (default: 1.5)"
 cmd_daemon_telemetry_about: "Change telemetry settings"
 cmd_daemon_settings_about: "Change daemon internal settings"
+cmd_daemon_overheat_about: "Flash the LED ring while the CPU is too hot (`on` = 95 °C)"
 cmd_daemon_version_about: "Show daemon version"
 cmd_telemetry_enable_about: "Enable telemetry"
 cmd_telemetry_disable_about: "Disable telemetry"
@@ -131,6 +132,8 @@ resp_telemetry_disabled: |
   🔗 Anonymous Telemetry Disabled. Telemetry helps me improve the quality of this project.
   Please consider enabling it, it's free and anonymous :)
 resp_telemetry_id: "🔗 Telemetry ID: 0x%{id}"
+resp_overheat_on: "🌡️ Overheat alarm: on, at %{c} °C"
+resp_overheat_off: "🌡️ Overheat alarm: off"
 
 # Help Labels
 help_usage: "Usage:"

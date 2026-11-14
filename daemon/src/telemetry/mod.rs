@@ -70,7 +70,7 @@ fn session_id() -> u64 {
     })
 }
 
-fn uptime_s() -> u64 {
+pub(crate) fn uptime_s() -> u64 {
     STARTED_AT.get().map(|t| t.elapsed().as_secs()).unwrap_or(0)
 }
 

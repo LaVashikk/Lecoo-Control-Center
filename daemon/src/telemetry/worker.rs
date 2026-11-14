@@ -93,6 +93,8 @@ fn collect_status() -> Option<TelemetryData> {
     let state = crate::handlers::get_state().ok()?;
 
     let profile = ec::read_power_profile(ec).ok()?;
+    // todo: take temps and rpm from crate::metrics instead of poking the EC a second time
+    // or move this whole Status tick into the metrics thread, idk yet
     let (cpu_temp_c, sys_temp_c) = ec::read_temperatures(ec).ok()?;
     let (cpu_fan_rpm, gpu_fan_rpm) = ec::read_fans_rpm(ec).ok()?;
 

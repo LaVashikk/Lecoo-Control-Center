@@ -249,6 +249,7 @@ pub fn print_help(target: Option<&str>, caps: Option<&Capabilities>) {
             println!("{}{} {}", bold_underline(), t!("help_subcommands"), reset());
             println!("  {}telemetry <enable|disable|id>{}  {}", bold(), reset(), t!("cmd_daemon_telemetry_about"));
             println!("  {}settings <reset|read|apply>{}    {}", bold(), reset(), t!("cmd_daemon_settings_about"));
+            println!("  {}overheat [on|off|°C]{}           {}", bold(), reset(), t!("cmd_daemon_overheat_about"));
             println!("  {}version{}                        {}", bold(), reset(), t!("cmd_daemon_version_about"));
             println!();
             print_options();

@@ -1,5 +1,6 @@
 pub mod caps;
 pub mod ec_types;
+pub mod metrics;
 pub mod settings;
 pub mod telemetry;
 

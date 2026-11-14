@@ -78,6 +78,9 @@ fn main() -> Result<()> {
     if matches!(command, CliCommand::Battery) {
         return battery::run(&mut client);
     }
+    if matches!(command, CliCommand::Daemon(DaemonSubcommand::OverheatStatus)) {
+        return print_overheat_status(&mut client);
+    }
 
     let request = match command {
         CliCommand::Info => IpcRequest::GetSystemState,
@@ -153,6 +156,8 @@ fn main() -> Result<()> {
             DaemonSubcommand::SettingsReset => IpcRequest::DaemonCommand(DaemonCommand::RestoreDefaults),
             DaemonSubcommand::SettingsRead => IpcRequest::DaemonCommand(DaemonCommand::GetSettings),
             DaemonSubcommand::SettingsApply => IpcRequest::DaemonCommand(DaemonCommand::ApplySettings),
+            DaemonSubcommand::Overheat(c) => IpcRequest::DaemonCommand(DaemonCommand::SetOverheatAlert(c)),
+            DaemonSubcommand::OverheatStatus => unreachable!(),
             DaemonSubcommand::Version => IpcRequest::GetSystemState,
         },
 
@@ -228,7 +233,8 @@ fn main() -> Result<()> {
         IpcResponse::Capabilities(c) => println!("{:#?}", c),
 
         // `read` and `battery` send their own requests and print the answers themselves
-        IpcResponse::Byte(_) | IpcResponse::BatteryInfo(_) => unreachable!(),
+        // nothing in the CLI asks for Metrics yet
+        IpcResponse::Byte(_) | IpcResponse::BatteryInfo(_) | IpcResponse::Metrics(_) => unreachable!(),
 
         IpcResponse::TelemetryDisabledInfo => {
             println!("{}", t!("resp_telemetry_disabled"));
@@ -243,6 +249,19 @@ fn main() -> Result<()> {
         }
     }
 
+    Ok(())
+}
+
+/// The threshold lives in the daemon settings, no dedicated request for it
+fn print_overheat_status(client: &mut IpcClient) -> Result<()> {
+    match client.request(&IpcRequest::DaemonCommand(DaemonCommand::GetSettings))? {
+        IpcResponse::Settings(s) => match s.overheat_alert_c {
+            Some(c) => println!("{}", t!("resp_overheat_on", c = c)),
+            None => println!("{}", t!("resp_overheat_off")),
+        },
+        IpcResponse::Error(err) => exit_with_error(err),
+        other => anyhow::bail!("Unexpected response: {other:?}"),
+    }
     Ok(())
 }
 

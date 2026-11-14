@@ -22,6 +22,7 @@ arg_led_flash_help: "播放一次预设 (默认 alert)，然后恢复当前模�
 arg_led_for_help: "`flash` 持续的秒数 (默认 1.5)"
 cmd_daemon_telemetry_about: "更改遥测设置"
 cmd_daemon_settings_about: "更改守护进程内部设置"
+cmd_daemon_overheat_about: "CPU 过热时闪烁灯环 (`on` = 95 °C)"
 cmd_daemon_version_about: "显示守护进程版本"
 cmd_telemetry_enable_about: "启用遥测"
 cmd_telemetry_disable_about: "禁用遥测"
@@ -131,6 +132,8 @@ resp_telemetry_disabled: |
   🔗 匿名遥测已禁用。遥测帮助我改进此项目的质量。
   请考虑启用它，它是免费且匿名的 :)
 resp_telemetry_id: "🔗 遥测ID: 0x%{id}"
+resp_overheat_on: "🌡️ 过热警报: 已开启, 阈值 %{c} °C"
+resp_overheat_off: "🌡️ 过热警报: 已关闭"
 
 # Help Labels
 help_usage: "用法:"
