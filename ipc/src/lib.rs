@@ -28,6 +28,8 @@ pub enum DaemonCommand {
     ApplySettings,
     GetTelemetryId,
     ActivateTelemetry(bool),
+    /// What the LED Ring shows while the system sleeps. Only stored, the sleep handler applies it
+    SetLedOnSleep(PowerLedMode),
 
     /// Raw byte at an absolute EC address
     Read(u16),
@@ -78,7 +80,6 @@ pub enum IpcRequest {
 
     /// Control the LED Ring
     SetLedMode(PowerLedMode),
-
     /// Send a command to the daemon
     DaemonCommand(DaemonCommand),
 

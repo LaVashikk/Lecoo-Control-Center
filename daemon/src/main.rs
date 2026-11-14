@@ -79,7 +79,6 @@ fn process_ipc_connection(mut conn: DaemonWorker) {
 
 /// Process system/service events
 fn process_service(rx_in_core: std::sync::mpsc::Receiver<services::InternalEvent>) {
-    use lecoo_types::ec_types::{BreathConfig, PowerLedMode};
     let ec = EC.get().unwrap();
 
     let read_and_save_state = |ec: &ec::EcDevice| {
@@ -98,12 +97,14 @@ fn process_service(rx_in_core: std::sync::mpsc::Receiver<services::InternalEvent
 
         match event {
             services::InternalEvent::SystemShuttingDown | services::InternalEvent::SystemHibernating => {
-                let _ = ec::apply_led_mode(ec, &PowerLedMode::Auto);
+                let _ = ec::apply_led_mode(ec, &lecoo_types::ec_types::PowerLedMode::Auto);
                 read_and_save_state(ec);
             }
 
             services::InternalEvent::SystemSleeping => {
-                let _ = ec::apply_led_mode(ec, &PowerLedMode::Animation(BreathConfig::sleep()));
+                if let Ok(state) = handlers::get_state() {
+                    let _ = ec::apply_led_mode(ec, &state.led_on_sleep);
+                }
                 read_and_save_state(ec);
             }
 

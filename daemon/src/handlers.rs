@@ -155,6 +155,10 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
         DaemonCommand::GetCapabilities => {
             Ok(IpcResponse::Capabilities(Box::new(ec.profile.caps(crate::VERSION))))
         }
+        DaemonCommand::SetLedOnSleep(mode) => {
+            get_state()?.led_on_sleep = *mode;
+            Ok(IpcResponse::Success)
+        }
         DaemonCommand::Read(addr) => Ok(IpcResponse::Byte(ec.read_abs(*addr)?)),
         #[cfg(feature = "unsafe_write_using_ipc")]
         DaemonCommand::Write(addr, val) => {

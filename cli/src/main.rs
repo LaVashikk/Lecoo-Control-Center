@@ -139,6 +139,7 @@ fn main() -> Result<()> {
         },
 
         CliCommand::Led { mode } => IpcRequest::SetLedMode(mode),
+        CliCommand::LedSleep { mode } => IpcRequest::DaemonCommand(DaemonCommand::SetLedOnSleep(mode)),
 
         CliCommand::Daemon(sub) => match sub {
             DaemonSubcommand::TelemetryEnable => {

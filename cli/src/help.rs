@@ -55,7 +55,7 @@ pub fn get_usage(target: Option<&str>, is_err: bool) -> String {
         Some("battery") => format!("{usage_prefix}{bin} battery"),
         Some("power") => format!("{usage_prefix}{bin} power [PROFILE]"),
         Some("kbd") => format!("{usage_prefix}{bin} kbd [MODE] [PWM_VAL]"),
-        Some("led") => format!("{usage_prefix}{bin} led <auto|custom> [PWM_VAL]"),
+        Some("led") => format!("{usage_prefix}{bin} led [sleep] <auto|custom|breath> [PWM_VAL|PRESET]"),
         Some("hwtest") => format!("{usage_prefix}{bin} hwtest"),
         Some("daemon") => format!("{usage_prefix}{bin} daemon <SUBCOMMAND>"),
         _ => format!("{usage_prefix}{bin} <COMMAND> [OPTIONS]"),
@@ -212,13 +212,22 @@ pub fn print_help(target: Option<&str>, caps: Option<&Capabilities>) {
             print_usage(target);
             println!();
             println!("{}{} {}", bold_underline(), t!("help_arguments"), reset());
-            println!("  {}<auto|custom>{}", bold(), reset());
+            println!("  {}[sleep]{}", bold(), reset());
+            println!("          {}", t!("arg_led_sleep_help"));
+            println!();
+            println!("  {}<auto|custom|breath>{}", bold(), reset());
             println!("          {}", t!("help_possible_values"));
             crate::defs::help_led_mode();
             println!("          - {}custom{}: {}", bold(), reset(), t!("cmd_led_custom_about"));
+            println!("          - {}breath{}: {}", bold(), reset(), t!("cmd_led_breath_about"));
             println!();
             println!("  {}[PWM_VAL]{}", bold(), reset());
             println!("          {}", t!("arg_led_val_help"));
+            println!();
+            println!("  {}[PRESET]{}", bold(), reset());
+            println!("          {}", t!("arg_led_preset_help"));
+            let names: Vec<&str> = lecoo_types::ec_types::BreathConfig::PRESETS.iter().map(|(n, _)| *n).collect();
+            println!("          {}", names.join(", "));
             println!();
             print_options();
         }

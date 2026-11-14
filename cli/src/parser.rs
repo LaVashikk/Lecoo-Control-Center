@@ -14,7 +14,7 @@
 
 use lecoo_types::caps::Capabilities;
 use lecoo_types::ec_types::{
-    ChargeIntent, ChargeRange, FanMode, KeyboardBacklightLevel, PowerLedMode, PowerProfile,
+    BreathConfig, ChargeIntent, ChargeRange, FanMode, KeyboardBacklightLevel, PowerLedMode, PowerProfile,
 };
 use lexopt::prelude::*;
 use rust_i18n::t;
@@ -47,6 +47,7 @@ pub enum CliCommand {
     Battery,
     Kbd { level: Option<KeyboardBacklightLevel> },
     Led { mode: PowerLedMode },
+    LedSleep { mode: PowerLedMode },
     Daemon(DaemonSubcommand),
     HwTest,
     Read { addr: u16, count: u16 },
@@ -235,14 +236,14 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
         }
 
         "led" => {
-            let action_str = require_arg(&args, 0, "<auto|custom>", &cmd_ctx)?;
-            let mode = if action_str.eq_ignore_ascii_case("custom") {
-                let pwm = parse_u8_arg(&args, 1, "[PWM_VAL]", &cmd_ctx)?;
-                PowerLedMode::Custom(pwm)
-            } else {
-                parse_led_mode(action_str, "<auto|custom>", &cmd_ctx)?
-            };
-            Ok(CliCommand::Led { mode })
+            let sleep = args.first().is_some_and(|a| a.eq_ignore_ascii_case("sleep"));
+            let mode = parse_led_args(&args[sleep as usize..], &cmd_ctx)?;
+
+            // the daemon won't stop us, it would just store a mode it can never apply
+            if matches!(mode, PowerLedMode::Animation(_)) && caps.is_some_and(|c| !c.led.animation) {
+                parse_bail!(cmd_ctx, "{}", t!("err_led_no_animation"));
+            }
+            Ok(if sleep { CliCommand::LedSleep { mode } } else { CliCommand::Led { mode } })
         }
 
         "daemon" => {
@@ -341,5 +342,21 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
                 parse_bail!(None, "{}", t!("err_unrecognized_cmd", cmd = cmd));
             }
         }
+    }
+}
+
+/// `<auto | custom PWM_VAL | breath PRESET>`, shared by `led` and `led sleep`
+fn parse_led_args(args: &[String], cmd_ctx: &Option<String>) -> Result<PowerLedMode, ParseError> {
+    let action = require_arg(args, 0, "<auto|custom|breath>", cmd_ctx)?;
+    match action.to_lowercase().as_str() {
+        "custom" => Ok(PowerLedMode::Custom(parse_u8_arg(args, 1, "[PWM_VAL]", cmd_ctx)?)),
+        "breath" => {
+            let name = require_arg(args, 1, "<PRESET>", cmd_ctx)?;
+            BreathConfig::by_name(name).map(PowerLedMode::Animation).ok_or_else(|| ParseError {
+                message: t!("err_invalid_value", val = name, arg = "<PRESET>").into(),
+                command: cmd_ctx.clone(),
+            })
+        }
+        _ => parse_led_mode(action, "<auto|custom|breath>", cmd_ctx),
     }
 }
