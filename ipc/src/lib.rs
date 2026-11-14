@@ -59,7 +59,12 @@ pub enum IpcRequest {
     GetChargeStatus,
     GetBatteryInfo,
     /// Latest snapshot from the daemon's metrics tick
-    GetMetrics,
+    GetMetrics {
+        /// Sample interval in ms the client wants while it's watching
+        live: Option<u16>,
+        /// todo: cursor for history, ignored until history exists
+        since: Option<u64>,
+    },
     /// TODO: LEGACY api for reading charge limit
     GetChargeLimit,
     GetPowerProfile,

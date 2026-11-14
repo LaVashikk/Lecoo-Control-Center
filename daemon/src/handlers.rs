@@ -104,7 +104,9 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         // todo: `since` once there is history to page through, for now it's always the latest sample
         IpcRequest::GetMetrics { live, since: _ } => {
             // todo: move to func
-            if *live { crate::metrics::watch(); }
+            if let Some(ms) = live {
+                crate::metrics::watch(std::time::Duration::from_millis(*ms as u64));
+            }
             crate::metrics::METRICS
                 .lock()
                 .map(|m| IpcResponse::Metrics(m.clone()))

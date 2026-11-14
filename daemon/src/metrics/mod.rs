@@ -1,15 +1,12 @@
 //! The one place that polls the EC on a timer
 //!
 //! Two paces: passive in the background, active while some client is watching.
-//! "Watching" is a lease, not a flag: every `GetMetrics { live: true }` extends it.
+//! "Watching" is a lease, not a flag: every `GetMetrics { live: Some(ms) }` renews it.
 // todo: histograms, telemetry here
 
 mod overheat;
 use std::{
-    sync::{
-        Mutex, OnceLock,
-        atomic::{AtomicU64, Ordering},
-    },
+    sync::{Mutex, OnceLock},
     thread::Thread,
     time::{Duration, Instant},
 };
@@ -22,16 +19,15 @@ use crate::ec::{self, EcDevice};
 /// A sample is ~6 EC bytes, each one a dozen syscalls plus LPC cycles on one core.
 /// Cheap, but nothing in the background needs more than a minute
 const PASSIVE_TICK: Duration = Duration::from_secs(60);
-// todo: pick a better one, should match how often the GUI redraws its graphs
-const ACTIVE_TICK: Duration = Duration::from_secs(4); // todo 2: or should we pass that FROM client? like `cli monitoring 0.2` then i needed 0.2s
+/// The EC itself refreshes these registers about once a second, faster just reads the same bytes
+const MIN_TICK: Duration = Duration::from_secs(1);
 /// A few missed client polls in a row before we call it gone
 const LEASE: Duration = Duration::from_secs(15);
 
 pub static METRICS: Mutex<Metrics> = Mutex::new(Metrics { last: None });
 
-/// ms since `EPOCH` until which we stay on the active pace
-static LIVE_UNTIL: AtomicU64 = AtomicU64::new(0);
-static EPOCH: OnceLock<Instant> = OnceLock::new();
+/// Fastest pace any live client asked for, and until when that lease holds
+static LIVE: Mutex<Option<(Duration, Instant)>> = Mutex::new(None);
 /// Handle of the metrics thread, only used to `unpark` it
 static THREAD: OnceLock<Thread> = OnceLock::new();
 
@@ -44,23 +40,33 @@ pub fn start() {
     let _ = THREAD.set(handle.thread().clone());
 }
 
-/// Someone is looking at the numbers, sample on the active pace for the next `LEASE`
-pub fn watch() {
-    let now = now_ms();
-    let prev = LIVE_UNTIL.fetch_max(now + LEASE.as_millis() as u64, Ordering::Relaxed);
+/// Someone is looking at the numbers and wants a sample every `want`, for the next `LEASE`.
+/// Keeps the fastest live request. When that client goes quiet its lease runs out,
+/// and the next slower client to renew takes over within one of its own polls
+pub fn watch(want: Duration) {
+    let want = want.clamp(MIN_TICK, PASSIVE_TICK);
+    let now = Instant::now();
+    let Ok(mut live) = LIVE.lock() else { return };
 
-    // we were passive, so the thread may be parked rn. ВСТАВАЙ, ЕРЖАН!
-    if prev <= now && let Some(t) = THREAD.get() {
+    let wake = match *live {
+        Some((pace, until)) if now < until && want > pace => return,
+        Some((pace, until)) => until <= now || want < pace,
+        None => true,
+    };
+    *live = Some((want, now + LEASE));
+    drop(live);
+
+    // the thread may be parked or on a slower pace rn. so ВСТАВАЙ, ЕРЖАН!
+    if wake && let Some(t) = THREAD.get() {
         t.unpark();
     }
 }
 
-fn is_live() -> bool {
-    now_ms() < LIVE_UNTIL.load(Ordering::Relaxed)
-}
-
-fn now_ms() -> u64 {
-    EPOCH.get_or_init(Instant::now).elapsed().as_millis() as u64
+fn pace() -> Duration {
+    match LIVE.lock().ok().and_then(|l| *l) {
+        Some((pace, until)) if Instant::now() < until => pace,
+        _ => PASSIVE_TICK,
+    }
 }
 
 fn run() {
@@ -70,8 +76,7 @@ fn run() {
 
     loop {
         // pace is re-read every round, so a fresh lease shortens the current wait
-        let pace = if is_live() { ACTIVE_TICK } else { PASSIVE_TICK };
-        let due = last.map_or_else(Instant::now, |l| l + pace);
+        let due = last.map_or_else(Instant::now, |l| l + pace());
         let now = Instant::now();
 
         if now < due {
