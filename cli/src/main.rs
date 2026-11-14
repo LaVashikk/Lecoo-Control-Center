@@ -91,22 +91,23 @@ fn main() -> Result<()> {
             let update_rate = (rate.unwrap_or(1.0) * 1000.0) as u64;
             println!("{}", t!("msg_monitoring_start", rate = update_rate));
             loop {
-                let IpcResponse::Temps { cpu_c: cpu, sys_c: system } =
-                    client.request(&IpcRequest::GetTemperatures)?
-                else {
-                    unreachable!()
-                };
-                let IpcResponse::FanRpm { cpu: cpu_fan, gpu: gpu_fan } =
-                    client.request(&IpcRequest::GetFansRPM)?
-                else {
-                    unreachable!()
+                // asks the daemon to sample at our --rate while we watch, it won't go below 1 s
+                let live = Some(update_rate.min(u16::MAX as u64) as u16);
+                let req = IpcRequest::GetMetrics { live, since: None };
+                let last = match client.request(&req)? {
+                    IpcResponse::Metrics(m) => m.last,
+                    IpcResponse::Error(err) => exit_with_error(err),
+                    other => anyhow::bail!("Unexpected response: {other:?}"),
                 };
 
-                print!(
-                    "\r{}      ",
-                    t!("msg_monitoring_loop", cpu = cpu, sys = system, cpu_f = cpu_fan, gpu_f = gpu_fan)
-                );
-                io::stdout().flush().unwrap();
+                // None only right after the daemon starts, before its first tick
+                if let Some(s) = last {
+                    print!(
+                        "\r{}      ",
+                        t!("msg_monitoring_loop", cpu = s.cpu_c, sys = s.sys_c, cpu_f = s.cpu_fan_rpm, gpu_f = s.gpu_fan_rpm)
+                    );
+                    io::stdout().flush().unwrap();
+                }
                 std::thread::sleep(std::time::Duration::from_millis(update_rate));
             }
         }
