@@ -53,6 +53,7 @@ pub enum IpcRequest {
     GetFansRPM,
     GetTemperatures,
     GetChargeStatus,
+    GetBatteryInfo,
     /// TODO: LEGACY api for reading charge limit
     GetChargeLimit,
     GetPowerProfile,
@@ -113,6 +114,8 @@ pub enum IpcResponse {
         max: u8,
         current: u8,
     },
+
+    BatteryInfo(BatteryInfo),
 
     /// Current battery charge status
     ChargeStatus(ChargeStatus),

@@ -72,6 +72,19 @@ pub struct BatterySpec {
     pub charge_current: Option<Addr>,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct BatteryGaugeSpec {
+    pub cells:          u8,
+    pub design_cap:     Addr,
+    pub design_volt:    Addr,
+    pub full_cap:       Addr,
+    pub status:         Addr,
+    pub current:        Addr,
+    pub rem_cap:        Addr,
+    pub voltage:        Addr,
+    pub cycles:         Addr,
+}
+
 // ---------- behaviour slots ----------
 
 #[derive(Debug, Clone, Copy)]
@@ -163,10 +176,11 @@ pub struct BoardProfile {
     pub sensors: &'static [SensorSpec],
     pub power: Option<PowerSpec>,
     pub battery: Option<BatterySpec>,
+    pub battery_gauge: Option<BatteryGaugeSpec>,
+    pub battery_leds: Option<BatteryLedsSpec>,
 
     pub kbd: KbdOps,
     pub led: LedOps,
-    pub battery_leds: Option<BatteryLedsSpec>,
     pub charge: ChargeOps,
     /// Board-specific, so a name never silently maps to a different behaviour.
     pub charge_presets: &'static [PresetSpec],
@@ -198,12 +212,6 @@ impl BoardProfile {
         if let Some(p) = self.power {
             v.push(("power.reg".into(), p.reg));
         }
-        if let Some(b) = self.battery {
-            v.push(("bat.rsoc".into(), b.rsoc));
-            if let Some(a) = b.charge_current {
-                v.push(("bat.current".into(), a));
-            }
-        }
         match self.kbd {
             KbdOps::None => {}
             KbdOps::PwmDuty { reg } => v.push(("kbd.reg".into(), reg)),
@@ -231,6 +239,22 @@ impl BoardProfile {
                 v.push(("led.breath_step".into(), breath_step));
                 v.push(("led.breath_delay".into(), breath_delay));
             }
+        }
+        if let Some(b) = self.battery {
+            v.push(("bat.rsoc".into(), b.rsoc));
+            if let Some(a) = b.charge_current {
+                v.push(("bat.current".into(), a));
+            }
+        }
+        if let Some(g) = self.battery_gauge {
+            v.push(("bat_gauge.design_cap".into(), g.design_cap));
+            v.push(("bat_gauge.design_volt".into(), g.design_volt));
+            v.push(("bat_gauge.full_cap".into(), g.full_cap));
+            v.push(("bat_gauge.status".into(), g.status));
+            v.push(("bat_gauge.current".into(), g.current));
+            v.push(("bat_gauge.rem_cap".into(), g.rem_cap));
+            v.push(("bat_gauge.voltage".into(), g.voltage));
+            v.push(("bat_gauge.cycles".into(), g.cycles));
         }
         if let Some(b) = self.battery_leds {
             v.push(("bat_leds.port".into(), b.port));

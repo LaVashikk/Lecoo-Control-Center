@@ -112,6 +112,28 @@ fn out_of_range_rejected() {
     assert!(serde_json::from_str::<FanMode>(r#"{"t":"Custom","c":300}"#).is_err());
 }
 
+/// Numbers from a real N155A, 80% charged
+#[test]
+fn battery_eta() {
+    let bat = |current_ma| BatteryInfo {
+        design_mah: 5200,
+        design_mv: 15400,
+        full_mah: 5200,
+        remaining_mah: 4160,
+        voltage_mv: 16580,
+        cycles: 161,
+        current_ma,
+        cells: 4,
+    };
+
+    assert_eq!(bat(-520).eta_min(100), Some(480));
+    // Charging aims at the limit, not at 100%: 5200 * 90% - 4160 = 520 mAh left
+    assert_eq!(bat(1040).eta_min(90), Some(30));
+    assert_eq!(bat(1040).eta_min(80), None, "already at the limit");
+    assert_eq!(bat(0).eta_min(100), None);
+    assert_eq!(bat(0).cell_mv(), Some(4145));
+}
+
 /// Prints a payload shaped exactly like the daemon's. Kept as an ignored test
 /// so the server can be probed with real bytes instead of hand-written JSON:
 /// `cargo test -p lecoo-types sample_payload -- --ignored --nocapture`
@@ -144,6 +166,7 @@ fn sample_payload() {
                 kbd: KbdCaps { on_off: true, levels: true, custom: true },
                 led: LedCaps { on_off: true, brightness: true, animation: true },
                 battery_leds: true,
+                battery_info: true,
                 charge: ChargeCaps::default(),
             }),
             restore_error: None,

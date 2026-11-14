@@ -69,6 +69,7 @@ fn caps_are_derived_from_ops() {
         assert_eq!(c.charge.supported, !matches!(p.charge, ChargeOps::None), "{}", p.id);
         assert_eq!(c.led.animation, matches!(p.led, LedOps::PwmBreath { .. }), "{}", p.id);
         assert_eq!(c.battery_leds, p.battery_leds.is_some(), "{}", p.id);
+        assert_eq!(c.battery_info, p.battery_gauge.is_some(), "{}", p.id);
         for (name, intent) in &c.charge.presets {
             assert!(p.supports_intent(intent), "{}: preset {name} not supported", p.id);
         }

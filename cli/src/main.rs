@@ -5,6 +5,7 @@ use ipc::{DaemonCommand, IpcClient, IpcRequest, IpcResponse};
 use lecoo_types::caps::Capabilities;
 use lecoo_types::ec_types::{ChargeIntent, FanIndex, FanMode};
 
+mod battery;
 mod defs;
 mod help;
 mod hwtest;
@@ -74,7 +75,9 @@ fn main() -> Result<()> {
     if let CliCommand::Read { addr, count } = command {
         return raw::dump(&mut client, addr, count);
     }
-    
+    if matches!(command, CliCommand::Battery) {
+        return battery::run(&mut client);
+    }
 
     let request = match command {
         CliCommand::Info => IpcRequest::GetSystemState,
@@ -151,7 +154,13 @@ fn main() -> Result<()> {
             DaemonSubcommand::Version => IpcRequest::GetSystemState,
         },
 
-        CliCommand::Help { .. } | CliCommand::Version | CliCommand::HwTest => unreachable!(),
+        CliCommand::Write { addr, val } => IpcRequest::DaemonCommand(DaemonCommand::Write(addr, val)),
+
+        CliCommand::Help { .. }
+        | CliCommand::Version
+        | CliCommand::HwTest
+        | CliCommand::Read { .. }
+        | CliCommand::Battery => unreachable!(),
     };
 
     let res: IpcResponse = client.request(&request)?;
@@ -215,6 +224,9 @@ fn main() -> Result<()> {
         }
 
         IpcResponse::Capabilities(c) => println!("{:#?}", c),
+
+        // `read` and `battery` send their own requests and print the answers themselves
+        IpcResponse::Byte(_) | IpcResponse::BatteryInfo(_) => unreachable!(),
 
         IpcResponse::TelemetryDisabledInfo => {
             println!("{}", t!("resp_telemetry_disabled"));

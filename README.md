@@ -100,7 +100,8 @@ Here are the primary commands for `lecoo-ctrl`:
       * *Example:* `lecoo-ctrl power perf`
   * `lecoo-ctrl charge <full|high|balanced|lifespan|desk>` - Set battery charging thresholds (FlexiCharger).
       * *Example:* `lecoo-ctrl charge desk` (Limits charging to 40-50% for permanent AC usage).
-      * Run `lecoo-ctrl charge` without arguments to view the current limit and battery capacity.
+      * Run `lecoo-ctrl charge` without arguments to view the current limit and charge level.
+  * `lecoo-ctrl battery` - Display battery health, capacity, power draw and cycle count.
 
 ### Thermal Control
 
@@ -132,7 +133,7 @@ Developers of third-party GUIs are welcome to submit a Pull Request to list thei
 
 | Project | Author | Platform | Tech Stack | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| *[Submit your GUI](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | — | Windows / Linux | — | Open a PR to add your GUI frontend. Because im lazy do it myself ;p |
+| *[Submit your GUI](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | Open a PR to add your GUI frontend. Because im lazy do it myself ;p |
 
 ## Telemetry & Data Collection
 

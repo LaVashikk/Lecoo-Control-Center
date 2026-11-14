@@ -25,3 +25,7 @@ winreg = "0.56.0"
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = "5"
 systemd-journal-logger = "2.1.1"
+
+[features]
+# Raw EC writes over IPC. Anyone who can reach the socket can poke any EC address, dev builds only
+unsafe_write_using_ipc = []

@@ -100,7 +100,8 @@ CN [中文 Readme 在这](README_RU.md)
       * *示例：* `lecoo-ctrl power perf`
   * `lecoo-ctrl charge <full|high|balanced|lifespan|desk>` - 设置电池充电阈值（FlexiCharger）。
       * *示例：* `lecoo-ctrl charge desk`（限制充电至40-50%，适用于永久AC使用）。
-      * 运行不带参数的`lecoo-ctrl charge`以查看当前限制和电池容量。
+      * 运行不带参数的`lecoo-ctrl charge`以查看当前限制和电量。
+  * `lecoo-ctrl battery` - 显示电池健康度、容量、功率和循环次数。
 
 ### 温度控制
 
@@ -132,7 +133,7 @@ CN [中文 Readme 在这](README_RU.md)
 
 | 项目 | 作者 | 平台 | 技术栈 | 特性 / 备注 |
 | :--- | :--- | :--- | :--- | :--- |
-| *[添加你的项目](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | — | Windows / Linux | — | 提交 PR 添加您的 GUI 前端 |
+| *[添加你的项目](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | 提交 PR 添加您的 GUI 前端 |
 
 ## 遥测与数据收集
 

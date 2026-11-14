@@ -56,6 +56,7 @@ pub struct Capabilities {
     pub led: LedCaps,
     pub battery_leds: bool,
     pub charge: ChargeCaps,
+    pub battery_info: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

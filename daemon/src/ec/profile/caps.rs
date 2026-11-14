@@ -46,6 +46,7 @@ impl BoardProfile {
             kbd,
             led,
             battery_leds: self.battery_leds.is_some(),
+            battery_info: self.battery_gauge.is_some(),
             charge,
         }
     }

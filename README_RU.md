@@ -97,7 +97,8 @@ Lecoo Control Center - это созданный методом обратной
       * *Пример:* `lecoo-ctrl power perf`
   * `lecoo-ctrl charge <full|high|balanced|lifespan|desk>` - Установить пороги зарядки батареи (FlexiCharger).
       * *Пример:* `lecoo-ctrl charge desk` (Ограничивает зарядку до 40-50% для постоянной работы от сети).
-      * Запустите `lecoo-ctrl charge` без аргументов, чтобы просмотреть текущий лимит и емкость батареи.
+      * Запустите `lecoo-ctrl charge` без аргументов, чтобы просмотреть текущий лимит и уровень заряда.
+  * `lecoo-ctrl battery` - Отобразить здоровье батареи, ёмкость, потребление и число циклов.
 
 ### Управление охлаждением
 
@@ -129,7 +130,7 @@ Lecoo Control Center - это созданный методом обратной
 
 | Проект | Автор | Платформа | Стек технологий | Особенности / Примечания |
 | :--- | :--- | :--- | :--- | :--- |
-| *[Добавьте свой проект](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | — | Windows / Linux | — | Откройте PR, чтобы добавить свой GUI |
+| *[Добавьте свой проект](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | Откройте PR, чтобы добавить свой GUI |
 
 ## Телеметрия и сбор данных
 

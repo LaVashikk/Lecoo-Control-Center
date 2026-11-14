@@ -80,6 +80,17 @@ pub const N155A: BoardProfile = BoardProfile {
         rsoc: Addr::Ram(0x93),
         charge_current: None,
     }),
+    battery_gauge: Some(BatteryGaugeSpec {
+        cells:       4,
+        design_cap:  Addr::Ram(0x84),
+        design_volt: Addr::Ram(0x86),
+        full_cap:    Addr::Ram(0x88),
+        status:      Addr::Ram(0x8C),
+        current:     Addr::Ram(0x8D),
+        rem_cap:     Addr::Ram(0x8F),
+        voltage:     Addr::Ram(0x91),
+        cycles:      Addr::Ram(0x95),
+    }),
 
     kbd: KbdOps::Levels {
         reg:            Addr::Banked(0x0F05),
@@ -123,6 +134,8 @@ pub const N155D: BoardProfile = BoardProfile {
     //     breath_step:  Addr::Reg(0x1851),
     //     breath_delay: Addr::Reg(0x1852),
     // },
+    // TODO: rn I have no idea, will that works or not and what const-health value
+    battery_gauge: None,
     ..N155A
 };
 
@@ -137,6 +150,8 @@ pub const N161A: BoardProfile = BoardProfile {
         freeze_soc: (62, 84),
     },
     charge_presets: N161A_PRESETS,
+    // TODO: rn I have no idea, will that works or not
+    battery_gauge: None,
     ..N155A
 };
 

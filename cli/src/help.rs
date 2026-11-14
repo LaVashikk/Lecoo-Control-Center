@@ -52,6 +52,7 @@ pub fn get_usage(target: Option<&str>, is_err: bool) -> String {
         Some("monitoring") => format!("{usage_prefix}{bin} monitoring [--rate <SECONDS>]"),
         Some("fan") => format!("{usage_prefix}{bin} fan <TARGET> <MODE> [PWM_VAL]"),
         Some("charge") => format!("{usage_prefix}{bin} charge [<PRESET> | --min <N> --max <N>]"),
+        Some("battery") => format!("{usage_prefix}{bin} battery"),
         Some("power") => format!("{usage_prefix}{bin} power [PROFILE]"),
         Some("kbd") => format!("{usage_prefix}{bin} kbd [MODE] [PWM_VAL]"),
         Some("led") => format!("{usage_prefix}{bin} led <auto|custom> [PWM_VAL]"),
@@ -166,6 +167,13 @@ pub fn print_help(target: Option<&str>, caps: Option<&Capabilities>) {
             println!();
             print_options();
         }
+        Some("battery") => {
+            println!("{}", t!("cmd_battery_about"));
+            println!();
+            print_usage(target);
+            println!();
+            print_options();
+        }
         Some("power") => {
             println!("{}", t!("cmd_power_about"));
             println!();
@@ -260,6 +268,7 @@ fn print_global_help(caps: Option<&Capabilities>) {
     println!("  {}monitoring{}    {}", bold(), reset(), t!("cmd_monitoring_about"));
     println!("  {}fan{}           {}", bold(), reset(), t!("cmd_fan_about"));
     println!("  {}charge{}        {}", bold(), reset(), t!("cmd_charge_about"));
+    println!("  {}battery{}       {}", bold(), reset(), t!("cmd_battery_about"));
     println!("  {}power{}         {}", bold(), reset(), t!("cmd_power_about"));
     println!("  {}kbd{}           {}", bold(), reset(), t!("cmd_kbd_about"));
     println!("  {}led{}           {}", bold(), reset(), t!("cmd_led_about"));

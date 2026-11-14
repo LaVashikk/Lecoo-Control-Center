@@ -98,6 +98,7 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::GetPowerProfile => get_power_profile(ec),
         IpcRequest::GetKeyboardBacklight => get_keyboard_backlight(ec),
         IpcRequest::GetChargeStatus => get_charge_status(ec),
+        IpcRequest::GetBatteryInfo => get_battery_info(ec),
 
         // SETTERS:
         IpcRequest::SetPowerProfile(profile) => set_power_profile(ec, profile),
@@ -234,6 +235,18 @@ fn get_charge_limit(ec: &EcDevice) -> Result<IpcResponse> {
     let (min, max) = ec::read_charge_limit(ec)?;
     let current = ec::read_battery_rsoc(ec)?;
     Ok(IpcResponse::ChargeLimit { min, max, current })
+}
+
+fn get_battery_info(ec: &EcDevice) -> Result<IpcResponse> {
+    if ec.profile.battery_gauge.is_none() {
+        return Ok(IpcResponse::Error(IpcError::new(
+            ErrorCode::UnsupportedHardware,
+            "Battery gauge is not supported on this board",
+            None,
+        )));
+    }
+    let info = ec::read_battery_info(ec)?;
+    Ok(IpcResponse::BatteryInfo(info))
 }
 
 fn get_power_profile(ec: &EcDevice) -> Result<IpcResponse> {

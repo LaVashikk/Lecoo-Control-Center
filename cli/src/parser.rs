@@ -44,6 +44,7 @@ pub enum CliCommand {
     Power { profile: Option<PowerProfile> },
     Fan { target: FanTarget, mode: FanMode },
     Charge { intent: Option<ChargeIntent> },
+    Battery,
     Kbd { level: Option<KeyboardBacklightLevel> },
     Led { mode: PowerLedMode },
     Daemon(DaemonSubcommand),
@@ -217,6 +218,8 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
             }
         }
 
+        "battery" => Ok(CliCommand::Battery),
+
         "kbd" => {
             if let Some(mode_str) = args.first() {
                 let level = if mode_str.eq_ignore_ascii_case("custom") {
@@ -309,6 +312,7 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
                 "monitoring",
                 "fan",
                 "charge",
+                "battery",
                 "power",
                 "kbd",
                 "led",
