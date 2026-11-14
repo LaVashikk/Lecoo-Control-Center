@@ -154,8 +154,25 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
         DaemonCommand::GetCapabilities => {
             Ok(IpcResponse::Capabilities(Box::new(ec.profile.caps(crate::VERSION))))
         }
+        DaemonCommand::Read(addr) => Ok(IpcResponse::Byte(ec.read_abs(*addr)?)),
+        #[cfg(feature = "unsafe_write_using_ipc")]
+        DaemonCommand::Write(addr, val) => {
+            log::warn!("Raw IPC write: {addr:#06X} = {val:#04X}");
+            ec.write(ec::Addr::Reg(*addr), *val)?;
+            Ok(IpcResponse::Success)
+        }
+        #[cfg(not(feature = "unsafe_write_using_ipc"))]
+        DaemonCommand::Write(..) => Ok(IpcResponse::Error(IpcError::new(
+            ErrorCode::UnsupportedRequest,
+            "Daemon was built without unsafe_write_using_ipc",
+            None,
+        ))),
 
-        _ => todo!(),
+        DaemonCommand::ActivateProcessSuspend(_) => todo!(),
+        DaemonCommand::RunPrepareShutdown => todo!(),
+        DaemonCommand::RunPrepareSuspend => todo!(),
+        DaemonCommand::RunPrepareResume => todo!(),
+        DaemonCommand::Unknown => Ok(IpcResponse::Error(IpcError::new(ErrorCode::UnsupportedRequest, "", None))),
     }
 }
 

@@ -52,6 +52,25 @@ pub fn parse_u8_arg(
     })
 }
 
+/// Extracts a positional argument as `0x`-prefixed hex or plain decimal
+pub fn parse_int_arg<T: TryFrom<u32>>(
+    args: &[String],
+    index: usize,
+    label: &str,
+    cmd_ctx: &Option<String>,
+) -> Result<T, ParseError> {
+    let s = require_arg(args, index, label, cmd_ctx)?;
+    let n = match s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
+        Some(hex) => u32::from_str_radix(hex, 16).ok(),
+        None => s.parse().ok(),
+    };
+    
+    n.and_then(|n| T::try_from(n).ok()).ok_or_else(|| ParseError {
+        message: t!("err_invalid_value", val = s, arg = label).into(),
+        command: cmd_ctx.clone(),
+    })
+}
+
 // --- Macro ---
 
 /// Defines enum value mappings for both CLI parsing and help generation.

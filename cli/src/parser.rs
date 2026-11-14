@@ -20,8 +20,8 @@ use lexopt::prelude::*;
 use rust_i18n::t;
 
 use crate::defs::{
-    FanTarget, ParseError, parse_fan_mode, parse_fan_target, parse_kbd_level, parse_led_mode,
-    parse_power_profile, parse_u8_arg, require_arg,
+    FanTarget, ParseError, parse_fan_mode, parse_fan_target, parse_int_arg, parse_kbd_level,
+    parse_led_mode, parse_power_profile, parse_u8_arg, require_arg,
 };
 
 #[derive(Debug, Clone)]
@@ -48,6 +48,8 @@ pub enum CliCommand {
     Led { mode: PowerLedMode },
     Daemon(DaemonSubcommand),
     HwTest,
+    Read { addr: u16, count: u16 },
+    Write { addr: u16, val: u8 },
     Help { target: Option<String> },
     Version,
 }
@@ -285,6 +287,19 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
         }
 
         "hwtest" => Ok(CliCommand::HwTest),
+
+        // Secret dev commands: not in help and not in `known_commands`,
+        // so a typo never suggests them either
+        "read" => {
+            let addr = parse_int_arg(&args, 0, "<ADDR>", &cmd_ctx)?;
+            let count = if args.len() > 1 { parse_int_arg(&args, 1, "[COUNT]", &cmd_ctx)? } else { 1 };
+            Ok(CliCommand::Read { addr, count })
+        }
+        "write" => {
+            let addr = parse_int_arg(&args, 0, "<ADDR>", &cmd_ctx)?;
+            let val = parse_int_arg(&args, 1, "<VAL>", &cmd_ctx)?;
+            Ok(CliCommand::Write { addr, val })
+        }
 
         _ => {
             let known_commands = [

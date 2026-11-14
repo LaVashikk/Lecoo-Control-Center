@@ -29,6 +29,12 @@ pub enum DaemonCommand {
     GetTelemetryId,
     ActivateTelemetry(bool),
 
+    /// Raw byte at an absolute EC address
+    Read(u16),
+    /// Raw write to an absolute EC address.
+    /// Only daemons built with `unsafe_write_using_ipc` actually execute it
+    Write(u16, u8),
+
     ActivateProcessSuspend(bool),
 
     RunPrepareShutdown, // todo: is this actually used?
@@ -120,6 +126,7 @@ pub enum IpcResponse {
     Settings(Box<CurrentSettings>),
     TelemetryId(u64),
     Capabilities(Box<Capabilities>),
+    Byte(u8),
 
     /// Information about telemetry being disabled
     TelemetryDisabledInfo,

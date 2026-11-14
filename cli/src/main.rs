@@ -9,6 +9,7 @@ mod defs;
 mod help;
 mod hwtest;
 mod parser;
+mod raw;
 
 use defs::FanTarget;
 use parser::{CliCommand, DaemonSubcommand};
@@ -70,6 +71,10 @@ fn main() -> Result<()> {
     if matches!(command, CliCommand::HwTest) {
         return hwtest::run(&mut client);
     }
+    if let CliCommand::Read { addr, count } = command {
+        return raw::dump(&mut client, addr, count);
+    }
+    
 
     let request = match command {
         CliCommand::Info => IpcRequest::GetSystemState,
@@ -215,17 +220,7 @@ fn main() -> Result<()> {
             println!("{}", t!("resp_telemetry_disabled"));
         }
 
-        IpcResponse::Error(err) => {
-            if let Some(info) = err.unsupported {
-                println!("{}", t!("msg_unsupported_title", board = info.board));
-                println!("{}", t!("msg_unsupported_hint"));
-            } else if err.code == ipc::ErrorCode::Precondition {
-                println!("{}", t!("msg_precondition", reason = err.message));
-            } else {
-                eprintln!("{}{}{}", help::err_red(), t!("msg_error", msg = err.message), help::err_reset());
-            }
-            std::process::exit(1);
-        }
+        IpcResponse::Error(err) => exit_with_error(err),
 
         IpcResponse::Settings(s) => println!("{:#?}", s),
 
@@ -235,4 +230,16 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+pub(crate) fn exit_with_error(err: ipc::IpcError) -> ! {
+    if let Some(info) = err.unsupported {
+        println!("{}", t!("msg_unsupported_title", board = info.board));
+        println!("{}", t!("msg_unsupported_hint"));
+    } else if err.code == ipc::ErrorCode::Precondition {
+        println!("{}", t!("msg_precondition", reason = err.message));
+    } else {
+        eprintln!("{}{}{}", help::err_red(), t!("msg_error", msg = err.message), help::err_reset());
+    }
+    std::process::exit(1);
 }
