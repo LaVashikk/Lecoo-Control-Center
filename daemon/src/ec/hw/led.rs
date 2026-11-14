@@ -1,4 +1,5 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::time::Duration;
 
 use super::EcDevice;
 use crate::ec::{Addr, LedOps, PwmSpec};
@@ -6,8 +7,11 @@ use anyhow::{Result, bail};
 use lecoo_types::ec_types::{BreathConfig, PowerLedMode};
 
 static IS_LED_ALREADY_CUSTOM: AtomicBool = AtomicBool::new(false);
+/// Bumped by every LED change, so a flash timer knows somebody else took the LED meanwhile
+static LED_GEN: AtomicU32 = AtomicU32::new(0);
 
 pub fn apply_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<()> {
+    LED_GEN.fetch_add(1, Ordering::Relaxed);
     match ec.profile.led {
         LedOps::None => bail!("Board {} has no controllable power LED", ec.profile.id),
 
@@ -34,6 +38,29 @@ pub fn apply_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<()> {
             }
         },
     }
+}
+
+/// Plays `effect` for `duration`, then puts `restore` back.
+/// Skips the restore if the LED was changed meanwhile (new mode, sleep, another flash). Returns right away
+pub fn flash_led(ec: &'static EcDevice, effect: BreathConfig, duration: Duration, restore: PowerLedMode) -> Result<()> {
+    // no breath engine, so at least a visible full-brightness blink
+    let mode = match ec.profile.led {
+        LedOps::Pwm { .. } => PowerLedMode::Custom(0xFF),
+        _ => PowerLedMode::Animation(effect),
+    };
+    apply_led_mode(ec, &mode)?;
+    let generation = LED_GEN.load(Ordering::Relaxed);
+
+    std::thread::spawn(move || {
+        std::thread::sleep(duration);
+        // a change not atomic, fine for a LED
+        if LED_GEN.load(Ordering::Relaxed) == generation
+            && let Err(e) = apply_led_mode(ec, &restore)
+        {
+            log::warn!("LED restore after flash failed: {e}");
+        }
+    });
+    Ok(())
 }
 
 pub fn apply_battery_leds(ec: &EcDevice, orange_on: bool, white_on: bool) -> Result<()> {

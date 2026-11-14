@@ -55,7 +55,12 @@ pub fn get_usage(target: Option<&str>, is_err: bool) -> String {
         Some("battery") => format!("{usage_prefix}{bin} battery"),
         Some("power") => format!("{usage_prefix}{bin} power [PROFILE]"),
         Some("kbd") => format!("{usage_prefix}{bin} kbd [MODE] [PWM_VAL]"),
-        Some("led") => format!("{usage_prefix}{bin} led [sleep] <auto|custom|breath> [PWM_VAL|PRESET]"),
+        Some("led") => {
+            let pad = " ".repeat(t!("help_usage").chars().count() + 1);
+            format!(
+                "{usage_prefix}{bin} led [sleep] <auto|custom|breath> [PWM_VAL|PRESET]\n{pad}{bin} led flash [PRESET] [--for <SECONDS>]"
+            )
+        }
         Some("hwtest") => format!("{usage_prefix}{bin} hwtest"),
         Some("daemon") => format!("{usage_prefix}{bin} daemon <SUBCOMMAND>"),
         _ => format!("{usage_prefix}{bin} <COMMAND> [OPTIONS]"),
@@ -215,6 +220,9 @@ pub fn print_help(target: Option<&str>, caps: Option<&Capabilities>) {
             println!("  {}[sleep]{}", bold(), reset());
             println!("          {}", t!("arg_led_sleep_help"));
             println!();
+            println!("  {}flash{}", bold(), reset());
+            println!("          {}", t!("arg_led_flash_help"));
+            println!();
             println!("  {}<auto|custom|breath>{}", bold(), reset());
             println!("          {}", t!("help_possible_values"));
             crate::defs::help_led_mode();
@@ -229,7 +237,9 @@ pub fn print_help(target: Option<&str>, caps: Option<&Capabilities>) {
             let names: Vec<&str> = lecoo_types::ec_types::BreathConfig::PRESETS.iter().map(|(n, _)| *n).collect();
             println!("          {}", names.join(", "));
             println!();
-            print_options();
+            println!("{}{} {}", bold_underline(), t!("help_options"), reset());
+            println!("  {}--for{} <SECONDS>  {}", bold(), reset(), t!("arg_led_for_help"));
+            println!("  {}-h, --help{}       {}", bold(), reset(), t!("help_cmd_help_about"));
         }
         Some("daemon") => {
             println!("{}", t!("cmd_daemon_about"));

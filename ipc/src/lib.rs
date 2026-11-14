@@ -80,6 +80,11 @@ pub enum IpcRequest {
 
     /// Control the LED Ring
     SetLedMode(PowerLedMode),
+    /// Plays a LED effect once, the daemon restores the saved mode by itself
+    FlashLed {
+        effect: BreathConfig,
+        duration_ms: u16,
+    },
     /// Send a command to the daemon
     DaemonCommand(DaemonCommand),
 

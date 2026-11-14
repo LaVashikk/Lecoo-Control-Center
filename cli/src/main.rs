@@ -139,6 +139,7 @@ fn main() -> Result<()> {
         },
 
         CliCommand::Led { mode } => IpcRequest::SetLedMode(mode),
+        CliCommand::LedFlash { effect, duration_ms } => IpcRequest::FlashLed { effect, duration_ms },
         CliCommand::LedSleep { mode } => IpcRequest::DaemonCommand(DaemonCommand::SetLedOnSleep(mode)),
 
         CliCommand::Daemon(sub) => match sub {

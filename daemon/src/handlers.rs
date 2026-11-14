@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{
     ec::{self, EcDevice},
     telemetry,
@@ -105,6 +107,7 @@ pub fn do_work(req: &IpcRequest) -> IpcResponse {
         IpcRequest::SetFanMode { fan, mode } => set_fan_mode(ec, fan, mode),
         IpcRequest::SetKeyboardBacklight(level) => set_keyboard_backlight(ec, level),
         IpcRequest::SetLedMode(mode) => set_led_mode(ec, mode),
+        IpcRequest::FlashLed { effect, duration_ms } => flash_led(ec, effect, *duration_ms),
         IpcRequest::SetChargeIntent(intent) => set_charge_intent(ec, intent),
         IpcRequest::SetChargeLimit(limit) => set_charge_limit_legacy(ec, limit),
 
@@ -327,5 +330,11 @@ fn set_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<IpcResponse> {
     ec::apply_led_mode(ec, mode)?;
     let mut state = get_state()?;
     state.led_mode = *mode;
+    Ok(IpcResponse::Success)
+}
+
+fn flash_led(ec: &'static EcDevice, effect: &BreathConfig, duration_ms: u16) -> Result<IpcResponse> {
+    let restore = get_state()?.led_mode;
+    ec::flash_led(ec, *effect, Duration::from_millis(duration_ms as u64), restore)?;
     Ok(IpcResponse::Success)
 }

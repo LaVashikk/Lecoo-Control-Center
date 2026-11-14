@@ -48,6 +48,7 @@ pub enum CliCommand {
     Kbd { level: Option<KeyboardBacklightLevel> },
     Led { mode: PowerLedMode },
     LedSleep { mode: PowerLedMode },
+    LedFlash { effect: BreathConfig, duration_ms: u16 },
     Daemon(DaemonSubcommand),
     HwTest,
     Read { addr: u16, count: u16 },
@@ -73,6 +74,7 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
     let mut min_val: Option<u8> = None;
     let mut max_val: Option<u8> = None;
     let mut rate_val: Option<f32> = None;
+    let mut for_val: Option<f32> = None;
     let mut wants_help = false;
 
     while let Some(arg) = parser
@@ -113,6 +115,16 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
                     command: command_name.clone(),
                 })?;
                 rate_val = Some(v);
+            }
+            Long("for") => {
+                let val_str = parser
+                    .value()
+                    .map_err(|e| ParseError { message: e.to_string(), command: command_name.clone() })?;
+                let v: f32 = val_str.parse().map_err(|_| ParseError {
+                    message: "Invalid value for --for".into(),
+                    command: command_name.clone(),
+                })?;
+                for_val = Some(v);
             }
             Value(val) => {
                 let s = val.into_string().map_err(|_| ParseError {
@@ -236,6 +248,17 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
         }
 
         "led" => {
+            // no animation check here: on boards without the breath engine the daemon flashes at full brightness
+            if args.first().is_some_and(|a| a.eq_ignore_ascii_case("flash")) {
+                let effect = match args.get(1) {
+                    Some(name) => parse_preset(name, &cmd_ctx)?,
+                    None => BreathConfig::ALERT,
+                };
+                // `as` saturates, so a silly --for just clamps to 0..65 s
+                let duration_ms = (for_val.unwrap_or(1.5) * 1000.0) as u16;
+                return Ok(CliCommand::LedFlash { effect, duration_ms });
+            }
+
             let sleep = args.first().is_some_and(|a| a.eq_ignore_ascii_case("sleep"));
             let mode = parse_led_args(&args[sleep as usize..], &cmd_ctx)?;
 
@@ -350,13 +373,14 @@ fn parse_led_args(args: &[String], cmd_ctx: &Option<String>) -> Result<PowerLedM
     let action = require_arg(args, 0, "<auto|custom|breath>", cmd_ctx)?;
     match action.to_lowercase().as_str() {
         "custom" => Ok(PowerLedMode::Custom(parse_u8_arg(args, 1, "[PWM_VAL]", cmd_ctx)?)),
-        "breath" => {
-            let name = require_arg(args, 1, "<PRESET>", cmd_ctx)?;
-            BreathConfig::by_name(name).map(PowerLedMode::Animation).ok_or_else(|| ParseError {
-                message: t!("err_invalid_value", val = name, arg = "<PRESET>").into(),
-                command: cmd_ctx.clone(),
-            })
-        }
+        "breath" => Ok(PowerLedMode::Animation(parse_preset(require_arg(args, 1, "<PRESET>", cmd_ctx)?, cmd_ctx)?)),
         _ => parse_led_mode(action, "<auto|custom|breath>", cmd_ctx),
     }
+}
+
+fn parse_preset(name: &str, cmd_ctx: &Option<String>) -> Result<BreathConfig, ParseError> {
+    BreathConfig::by_name(name).ok_or_else(|| ParseError {
+        message: t!("err_invalid_value", val = name, arg = "<PRESET>").into(),
+        command: cmd_ctx.clone(),
+    })
 }

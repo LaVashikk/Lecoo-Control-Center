@@ -28,7 +28,7 @@ fn ec_types_roundtrip() {
     }
     roundtrip(PowerLedMode::Auto);
     roundtrip(PowerLedMode::Custom(200));
-    roundtrip(PowerLedMode::Animation(BreathConfig::sleep()));
+    roundtrip(PowerLedMode::Animation(BreathConfig::SLEEP));
     roundtrip(ChargeIntent::Full);
     roundtrip(ChargeIntent::Freeze);
     roundtrip(ChargeIntent::Preserve(None));
@@ -110,6 +110,17 @@ fn unknown_field_ignored() {
 #[test]
 fn out_of_range_rejected() {
     assert!(serde_json::from_str::<FanMode>(r#"{"t":"Custom","c":300}"#).is_err());
+}
+
+/// Two presets with the same config would make `preset_name` report the wrong one
+#[test]
+fn breath_presets_roundtrip() {
+    for (name, cfg) in BreathConfig::PRESETS {
+        assert_eq!(BreathConfig::by_name(name), Some(*cfg), "{name}");
+        assert_eq!(cfg.preset_name(), Some(*name), "{name} shares its config with another preset");
+    }
+    assert_eq!(BreathConfig::by_name("ZEN"), Some(BreathConfig::ZEN));
+    assert_eq!(BreathConfig::by_name("nope"), None);
 }
 
 /// Numbers from a real N155A, 80% charged
