@@ -195,7 +195,9 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
         DaemonCommand::RunPrepareShutdown => todo!(),
         DaemonCommand::RunPrepareSuspend => todo!(),
         DaemonCommand::RunPrepareResume => todo!(),
-        DaemonCommand::Unknown => Ok(IpcResponse::Error(IpcError::new(ErrorCode::UnsupportedRequest, "", None))),
+        DaemonCommand::Unknown => {
+            Ok(IpcResponse::Error(IpcError::new(ErrorCode::UnsupportedRequest, "", None)))
+        }
     }
 }
 

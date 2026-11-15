@@ -50,26 +50,18 @@ pub fn show(conn: &Connection, needle: &str, clients: i64, limit: i64) -> Result
 }
 
 fn identity(conn: &Connection) -> Result {
-    let (first, last, age, events, sessions, srcs): (
-        String,
-        String,
-        String,
-        i64,
-        Option<i64>,
-        String,
-    ) = conn.query_row(
-        &format!(
-            "SELECT MIN(ts), MAX(ts), {}, COUNT(*),
+    let (first, last, age, events, sessions, srcs): (String, String, String, i64, Option<i64>, String) = conn
+        .query_row(
+            &format!(
+                "SELECT MIN(ts), MAX(ts), {}, COUNT(*),
                     NULLIF(COUNT(DISTINCT session_id), 0),
                     (SELECT GROUP_CONCAT(DISTINCT src) FROM ev)
              FROM ev",
-            sql::ago("MAX(ts)")
-        ),
-        [],
-        |row| {
-            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?))
-        },
-    )?;
+                sql::ago("MAX(ts)")
+            ),
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?)),
+        )?;
 
     let mut facts = Facts::new();
     facts.add("first seen", &first);
@@ -175,12 +167,12 @@ fn thermals(conn: &Connection) -> Result {
 }
 
 struct Applied {
-    ts: String,
+    ts:       String,
     fan_mode: Option<String>,
-    kbd: Option<String>,
-    led: Option<String>,
-    charge: Option<String>,
-    soc: Option<i64>,
+    kbd:      Option<String>,
+    led:      Option<String>,
+    charge:   Option<String>,
+    soc:      Option<i64>,
     uptime_s: Option<i64>,
 }
 
@@ -194,12 +186,12 @@ fn settings(conn: &Connection) -> Result {
             [],
             |row| {
                 Ok(Applied {
-                    ts: row.get(0)?,
+                    ts:       row.get(0)?,
                     fan_mode: row.get(1)?,
-                    kbd: row.get(2)?,
-                    led: row.get(3)?,
-                    charge: row.get(4)?,
-                    soc: row.get(5)?,
+                    kbd:      row.get(2)?,
+                    led:      row.get(3)?,
+                    charge:   row.get(4)?,
+                    soc:      row.get(5)?,
                     uptime_s: row.get(6)?,
                 })
             },

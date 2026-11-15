@@ -10,13 +10,15 @@ const HYSTERESIS_C: u8 = 5;
 /// Every hot tick re-arms a flash that outlives the tick.
 #[derive(Default)]
 pub(super) struct Overheat {
-    active: bool,
+    active:   bool,
     armed_at: Option<Instant>,
 }
 
 impl Overheat {
     pub(super) fn check(&mut self, ec: &'static EcDevice, cpu_c: u8, rearm_every: Duration) {
-        let Ok((threshold, restore)) = crate::handlers::get_state().map(|st| (st.overheat_alert_c, st.led_mode)) else {
+        let Ok((threshold, restore)) =
+            crate::handlers::get_state().map(|st| (st.overheat_alert_c, st.led_mode))
+        else {
             return;
         };
 

@@ -24,7 +24,7 @@ pub fn dump(client: &mut IpcClient, addr: u16, count: u16) -> Result<()> {
         if i % ROW == 0 {
             row = format!("{a:#06X}:");
         }
-        
+
         row.push_str(&format!(" {b:02X}"));
         if i % ROW == ROW - 1 || i == count - 1 {
             println!("{row}");

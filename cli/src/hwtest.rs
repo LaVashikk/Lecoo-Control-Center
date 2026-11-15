@@ -60,7 +60,7 @@ impl fmt::Display for Verdict {
 }
 
 struct CategoryResult {
-    name: &'static str,
+    name:    &'static str,
     overall: Verdict,
     details: Vec<(String, Verdict)>,
 }

@@ -26,10 +26,10 @@ pub struct EcDevice {
     /// Mutex wraps the low-level I/O backend.
     /// Locking it ensures atomic multi-step Super I/O transactions,
     /// preventing thread race conditions during Index/Data port writes.
-    io: Mutex<RawPortIo>,
+    io:          Mutex<RawPortIo>,
     /// Selected profile for runtime
     pub profile: &'static BoardProfile,
-    pub rt: EcRuntime,
+    pub rt:      EcRuntime,
 }
 
 impl EcDevice {
@@ -215,8 +215,8 @@ fn raw_read(io: &RawPortIo, port: u16, addr: u16) -> Result<u8> {
 /// A short-lived transaction guard holding the hardware mutex.
 /// Contains the actual low-level port read/write implementations.
 pub struct EcBatch<'a> {
-    io: std::sync::MutexGuard<'a, RawPortIo>,
-    pub rt: EcRuntime,
+    io:          std::sync::MutexGuard<'a, RawPortIo>,
+    pub rt:      EcRuntime,
     pub profile: &'static BoardProfile,
 }
 

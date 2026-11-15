@@ -64,7 +64,7 @@ pub fn parse_int_arg<T: TryFrom<u32>>(
         Some(hex) => u32::from_str_radix(hex, 16).ok(),
         None => s.parse().ok(),
     };
-    
+
     n.and_then(|n| T::try_from(n).ok()).ok_or_else(|| ParseError {
         message: t!("err_invalid_value", val = s, arg = label).into(),
         command: cmd_ctx.clone(),

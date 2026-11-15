@@ -119,7 +119,7 @@ enum Command {
 }
 
 pub struct Opts {
-    pub days: i64,
+    pub days:  i64,
     pub limit: i64,
 }
 
@@ -143,9 +143,7 @@ pub fn run(cli: Cli) -> rusqlite::Result<()> {
         Command::Report { .. } | Command::Sql { .. } => unified::Scope::everything(),
         Command::Client { id } => unified::Scope::client(id),
         Command::Find { .. } => unified::Scope::kinds(sql::IDENTITY_KINDS),
-        Command::Errors { client: Some(id), .. } => {
-            unified::Scope::client(id).limited_to(sql::FAILURE_KINDS)
-        }
+        Command::Errors { client: Some(id), .. } => unified::Scope::client(id).limited_to(sql::FAILURE_KINDS),
         Command::Errors { client: None, .. } => unified::Scope::kinds(sql::FAILURE_KINDS),
     };
 
@@ -163,9 +161,7 @@ pub fn run(cli: Cli) -> rusqlite::Result<()> {
         Command::Report { only } => report::run(&conn, &opts, &sources, only)?,
         Command::Client { id } => client::show(&conn, id, sources.clients, opts.limit)?,
         Command::Find { pattern } => lookup::find(&conn, pattern, opts.limit)?,
-        Command::Errors { recent, .. } => {
-            lookup::errors(&conn, recent.then_some(opts.days), opts.limit)?
-        }
+        Command::Errors { recent, .. } => lookup::errors(&conn, recent.then_some(opts.days), opts.limit)?,
         Command::Sql { query } => lookup::query(&conn, query)?,
     }
 

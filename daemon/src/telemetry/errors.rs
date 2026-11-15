@@ -50,7 +50,9 @@ impl Log for Forwarder {
         }
 
         let line = record.line().unwrap_or(0);
-        let Some(count) = occurrence(module, line) else { return };
+        let Some(count) = occurrence(module, line) else {
+            return;
+        };
 
         super::send(TelemetryData::ErrorLog {
             level: record.level().as_str().to_owned(),

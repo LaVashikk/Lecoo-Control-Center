@@ -11,26 +11,26 @@ const PROFILE_MAP: &[(u8, PowerProfile)] = &[
 
 const N155A_FANS: &[FanSpec] = &[
     FanSpec {
-        index: FanIndex::Cpu,
-        rpm_msb: Addr::Ram(0x76),
-        rpm_lsb: Addr::Ram(0x77),
-        duty: Addr::Ram(0x4B),
-        policy: Addr::Ram(0x4F),
-        policy_auto: 0x00,
+        index:         FanIndex::Cpu,
+        rpm_msb:       Addr::Ram(0x76),
+        rpm_lsb:       Addr::Ram(0x77),
+        duty:          Addr::Ram(0x4B),
+        policy:        Addr::Ram(0x4F),
+        policy_auto:   0x00,
         policy_manual: 0x40,
-        duty_full: 165,
-        duty_max: 220,
+        duty_full:     165,
+        duty_max:      220,
     },
     FanSpec {
-        index: FanIndex::Gpu,
-        rpm_msb: Addr::Ram(0x79),
-        rpm_lsb: Addr::Ram(0x7A),
-        duty: Addr::Ram(0x4D),
-        policy: Addr::Ram(0x4E),
-        policy_auto: 0x00,
+        index:         FanIndex::Gpu,
+        rpm_msb:       Addr::Ram(0x79),
+        rpm_lsb:       Addr::Ram(0x7A),
+        duty:          Addr::Ram(0x4D),
+        policy:        Addr::Ram(0x4E),
+        policy_auto:   0x00,
         policy_manual: 0x40,
-        duty_full: 165,
-        duty_max: 220,
+        duty_full:     165,
+        duty_max:      220,
     },
 ];
 
@@ -150,7 +150,7 @@ pub const N161A: BoardProfile = BoardProfile {
     // 0x7A is the cycle counter here, so the inherited Gpu rpm was half garbage anyway
     fans: &[],
     battery: Some(BatterySpec {
-        rsoc: Addr::Ram(0x93),
+        rsoc:           Addr::Ram(0x93),
         // fw writes 0x03E8 / 0x09C4 here (1000 / 2500 mA) and zeroes it when charging stops
         charge_current: Some(Addr::Reg(0x05D4)),
     }),
@@ -169,10 +169,10 @@ pub const N161A: BoardProfile = BoardProfile {
     // its own stand-off flag looks like bit1 of Ram(0x10), set by a mailbox cmd. needs a test on hw
     led: LedOps::None,
     charge: ChargeOps::PolicyByte {
-        reg: Addr::Reg(0x0414),
+        reg:           Addr::Reg(0x0414),
         fw_thresholds: (61, 76),
-        arm_below: 60,
-        freeze_soc: (62, 84),
+        arm_below:     60,
+        freeze_soc:    (62, 84),
     },
     charge_presets: N161A_PRESETS,
     ..N155A

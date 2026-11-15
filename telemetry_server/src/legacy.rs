@@ -27,16 +27,16 @@ enum PowerProfile {
 #[serde(tag = "t", content = "c")]
 enum DataV2 {
     Startup {
-        firmware: String,
-        offset: u16,
-        cpu: String,
-        os: String,
+        firmware:    String,
+        offset:      u16,
+        cpu:         String,
+        os:          String,
         motherboard: String,
     },
     Status {
         profile: PowerProfile,
-        temps: [u32; 2],
-        fans: [u32; 2],
+        temps:   [u32; 2],
+        fans:    [u32; 2],
     },
     Panic {
         error: String,
@@ -50,14 +50,14 @@ enum DataV2 {
 enum DataV1 {
     Startup {
         firmware: String,
-        offset: u16,
-        cpu: String,
-        os: String,
+        offset:   u16,
+        cpu:      String,
+        os:       String,
     },
     Status {
         profile: PowerProfile,
-        temps: [u32; 2],
-        fans: [u32; 2],
+        temps:   [u32; 2],
+        fans:    [u32; 2],
     },
     Panic {
         error: String,
@@ -67,14 +67,14 @@ enum DataV1 {
 #[derive(Debug, Decode, Serialize)]
 struct PayloadV2 {
     #[serde(serialize_with = "hex_id")]
-    id: u64,
+    id:   u64,
     data: DataV2,
 }
 
 #[derive(Debug, Decode, Serialize)]
 struct PayloadV1 {
     #[serde(serialize_with = "hex_id")]
-    id: u64,
+    id:   u64,
     data: DataV1,
 }
 

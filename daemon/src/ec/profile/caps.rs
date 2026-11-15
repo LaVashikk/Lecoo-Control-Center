@@ -20,20 +20,20 @@ impl BoardProfile {
         let charge = match self.charge {
             ChargeOps::None => ChargeCaps::default(),
             ChargeOps::FlexiCharger { bounds, freeze_verified, .. } => ChargeCaps {
-                supported: true,
-                custom_range: Some(bounds),
-                preserve_fixed: None,
-                freeze_soc: if freeze_verified { Some(bounds) } else { None },
+                supported:       true,
+                custom_range:    Some(bounds),
+                preserve_fixed:  None,
+                freeze_soc:      if freeze_verified { Some(bounds) } else { None },
                 survives_daemon: false,
-                presets: self.preset_list(),
+                presets:         self.preset_list(),
             },
             ChargeOps::PolicyByte { fw_thresholds, freeze_soc, .. } => ChargeCaps {
-                supported: true,
-                custom_range: None,
-                preserve_fixed: Some(fw_thresholds),
-                freeze_soc: Some(freeze_soc),
+                supported:       true,
+                custom_range:    None,
+                preserve_fixed:  Some(fw_thresholds),
+                freeze_soc:      Some(freeze_soc),
                 survives_daemon: true,
-                presets: self.preset_list(),
+                presets:         self.preset_list(),
             },
         };
 

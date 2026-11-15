@@ -13,3 +13,10 @@ single_line_if_else_max_width = 100
 
 style_edition = "2024"
 newline_style = "Unix"
+
+# Nightly only: `cargo +nightly fmt`. Stable warns, skips both and strips the alignment back out
+struct_field_align_threshold = 30
+enum_discrim_align_threshold = 30
+# Alignment padding counts against this width, so at the default 38 a padded `LedFlash { .. }` no longer fits on one line
+# and rustfmt then splits EVERY struct variant of CliCommand to keep them consistent
+struct_variant_width = 50

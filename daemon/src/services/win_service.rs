@@ -144,15 +144,15 @@ fn my_service_main(_arguments: Vec<std::ffi::OsString>) {
 
     // Notify the Service Control Manager that the service is running & ready
     let next_status = ServiceStatus {
-        service_type: ServiceType::OWN_PROCESS,
-        current_state: ServiceState::Running,
+        service_type:      ServiceType::OWN_PROCESS,
+        current_state:     ServiceState::Running,
         controls_accepted: ServiceControlAccept::STOP
             | ServiceControlAccept::POWER_EVENT
             | ServiceControlAccept::SHUTDOWN,
-        exit_code: ServiceExitCode::Win32(0),
-        checkpoint: 0,
-        wait_hint: Duration::default(),
-        process_id: None,
+        exit_code:         ServiceExitCode::Win32(0),
+        checkpoint:        0,
+        wait_hint:         Duration::default(),
+        process_id:        None,
     };
     status_handle.set_service_status(next_status).unwrap();
     tx_init.send(InternalEvent::Inited).unwrap();
@@ -164,13 +164,13 @@ fn my_service_main(_arguments: Vec<std::ffi::OsString>) {
     info!("TIME TO STOP!");
     status_handle
         .set_service_status(ServiceStatus {
-            service_type: ServiceType::OWN_PROCESS,
-            current_state: ServiceState::Stopped,
+            service_type:      ServiceType::OWN_PROCESS,
+            current_state:     ServiceState::Stopped,
             controls_accepted: ServiceControlAccept::empty(),
-            exit_code: ServiceExitCode::Win32(0),
-            checkpoint: 0,
-            wait_hint: Duration::default(),
-            process_id: None,
+            exit_code:         ServiceExitCode::Win32(0),
+            checkpoint:        0,
+            wait_hint:         Duration::default(),
+            process_id:        None,
         })
         .unwrap();
 }
@@ -178,11 +178,11 @@ fn my_service_main(_arguments: Vec<std::ffi::OsString>) {
 #[repr(C)]
 #[derive(Default, Debug, Clone, Copy)]
 struct SystemPowerStatus {
-    ac_line_status: u8,
-    battery_flag: u8,
-    battery_life_percent: u8,
-    system_status_flag: u8,
-    battery_life_time: u32,
+    ac_line_status:         u8,
+    battery_flag:           u8,
+    battery_life_percent:   u8,
+    system_status_flag:     u8,
+    battery_life_time:      u32,
     battery_full_life_time: u32,
 }
 

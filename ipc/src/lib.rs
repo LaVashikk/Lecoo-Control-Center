@@ -61,7 +61,7 @@ pub enum IpcRequest {
     /// Latest snapshot from the daemon's metrics tick
     GetMetrics {
         /// Sample interval in ms the client wants while it's watching
-        live: Option<u16>,
+        live:  Option<u16>,
         /// todo: cursor for history, ignored until history exists
         since: Option<u64>,
     },
@@ -75,7 +75,7 @@ pub enum IpcRequest {
 
     /// Set a specific fan's mode (Auto/Full/Custom)
     SetFanMode {
-        fan: FanIndex,
+        fan:  FanIndex,
         mode: FanMode,
     },
 
@@ -91,7 +91,7 @@ pub enum IpcRequest {
     SetLedMode(PowerLedMode),
     /// Plays a LED effect once, the daemon restores the saved mode by itself
     FlashLed {
-        effect: BreathConfig,
+        effect:      BreathConfig,
         duration_ms: u16,
     },
     /// Send a command to the daemon
@@ -125,8 +125,8 @@ pub enum IpcResponse {
 
     /// Current battery charge limit (TODO: LEGACY)
     ChargeLimit {
-        min: u8,
-        max: u8,
+        min:     u8,
+        max:     u8,
         current: u8,
     },
 
@@ -164,16 +164,16 @@ pub enum ErrorCode {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemInfo {
-    pub chip: String,
-    pub revision: String,
-    pub hram_offset: u16,
+    pub chip:           String,
+    pub revision:       String,
+    pub hram_offset:    u16,
     pub daemon_version: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct IpcError {
-    pub code: ErrorCode,
-    pub message: String,
+    pub code:        ErrorCode,
+    pub message:     String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unsupported: Option<UnsupportedInfo>,
 }
@@ -187,7 +187,7 @@ impl IpcError {
 // ---------
 
 pub struct IpcConnection<Tx, Rx> {
-    stream: Stream,
+    stream:  Stream,
     _marker: PhantomData<(Tx, Rx)>,
 }
 

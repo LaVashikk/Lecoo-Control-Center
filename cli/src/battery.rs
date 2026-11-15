@@ -62,7 +62,10 @@ fn print(info: &BatteryInfo, status: Option<&ChargeStatus>) {
 
     let pct = info.charge_pct().map_or("n/a".to_string(), |p| format!("{p:.1}%"));
     println!("{}", t!("resp_battery_charge", rem = info.remaining_mah, full = info.full_mah, pct = pct));
-    println!("{}", t!("resp_battery_energy", rem = info.remaining_wh() : {:.1}, full = info.full_wh() : {:.1}));
+    println!(
+        "{}",
+        t!("resp_battery_energy", rem = info.remaining_wh() : {:.1}, full = info.full_wh() : {:.1})
+    );
 
     let health = info.health_pct().map_or("n/a".to_string(), |h| format!("{h:.1}%"));
     println!("{}", t!("resp_battery_health", health = health));

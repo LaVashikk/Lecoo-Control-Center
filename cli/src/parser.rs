@@ -13,16 +13,16 @@
 //! a completely dynamic `--help` output that actually matches the user's hardware.
 
 use lecoo_types::caps::Capabilities;
-use lecoo_types::settings::OVERHEAT_DEFAULT_C;
 use lecoo_types::ec_types::{
     BreathConfig, ChargeIntent, ChargeRange, FanMode, KeyboardBacklightLevel, PowerLedMode, PowerProfile,
 };
+use lecoo_types::settings::OVERHEAT_DEFAULT_C;
 use lexopt::prelude::*;
 use rust_i18n::t;
 
 use crate::defs::{
-    FanTarget, ParseError, parse_fan_mode, parse_fan_target, parse_int_arg, parse_kbd_level,
-    parse_led_mode, parse_power_profile, parse_u8_arg, require_arg,
+    FanTarget, ParseError, parse_fan_mode, parse_fan_target, parse_int_arg, parse_kbd_level, parse_led_mode,
+    parse_power_profile, parse_u8_arg, require_arg,
 };
 
 #[derive(Debug, Clone)]
@@ -300,7 +300,9 @@ pub fn parse_args(caps: Option<&Capabilities>) -> Result<CliCommand, ParseError>
                     None => DaemonSubcommand::OverheatStatus,
                     Some("on") => DaemonSubcommand::Overheat(Some(OVERHEAT_DEFAULT_C)),
                     Some("off") => DaemonSubcommand::Overheat(None),
-                    Some(_) => DaemonSubcommand::Overheat(Some(parse_int_arg(&args, 1, "[on|off|°C]", &cmd_ctx)?)),
+                    Some(_) => {
+                        DaemonSubcommand::Overheat(Some(parse_int_arg(&args, 1, "[on|off|°C]", &cmd_ctx)?))
+                    }
                 },
                 "settings" => {
                     let action = args.get(1).ok_or_else(|| ParseError {
@@ -383,7 +385,9 @@ fn parse_led_args(args: &[String], cmd_ctx: &Option<String>) -> Result<PowerLedM
     let action = require_arg(args, 0, "<auto|custom|breath>", cmd_ctx)?;
     match action.to_lowercase().as_str() {
         "custom" => Ok(PowerLedMode::Custom(parse_u8_arg(args, 1, "[PWM_VAL]", cmd_ctx)?)),
-        "breath" => Ok(PowerLedMode::Animation(parse_preset(require_arg(args, 1, "<PRESET>", cmd_ctx)?, cmd_ctx)?)),
+        "breath" => {
+            Ok(PowerLedMode::Animation(parse_preset(require_arg(args, 1, "<PRESET>", cmd_ctx)?, cmd_ctx)?))
+        }
         _ => parse_led_mode(action, "<auto|custom|breath>", cmd_ctx),
     }
 }

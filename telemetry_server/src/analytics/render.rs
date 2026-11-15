@@ -14,8 +14,8 @@ pub const RESET: &str = "\x1b[0m";
 
 pub fn c(code: &str) -> &str {
     static ENABLED: OnceLock<bool> = OnceLock::new();
-    let enabled = *ENABLED
-        .get_or_init(|| std::env::var_os("NO_COLOR").is_none() && std::io::stdout().is_terminal());
+    let enabled =
+        *ENABLED.get_or_init(|| std::env::var_os("NO_COLOR").is_none() && std::io::stdout().is_terminal());
     if enabled { code } else { "" }
 }
 
@@ -71,7 +71,7 @@ fn cell(row: &Row, idx: usize) -> String {
 
 pub struct Table {
     headers: Vec<String>,
-    rows: Vec<Vec<String>>,
+    rows:    Vec<Vec<String>>,
 }
 
 impl Table {
@@ -115,17 +115,12 @@ impl Table {
 
     /// Appends a share-of-total column computed from an existing numeric one.
     pub fn with_share(mut self, column: usize, label: &str) -> Self {
-        let total: f64 =
-            self.rows.iter().filter_map(|r| r[column].parse::<f64>().ok()).sum();
+        let total: f64 = self.rows.iter().filter_map(|r| r[column].parse::<f64>().ok()).sum();
 
         self.headers.push(label.to_string());
         for row in &mut self.rows {
             let value = row[column].parse::<f64>().unwrap_or(0.0);
-            row.push(if total > 0.0 {
-                format!("{:.1}%", value / total * 100.0)
-            } else {
-                "-".to_string()
-            });
+            row.push(if total > 0.0 { format!("{:.1}%", value / total * 100.0) } else { "-".to_string() });
         }
         self
     }
@@ -141,7 +136,12 @@ impl Table {
             .iter()
             .enumerate()
             .map(|(i, h)| {
-                self.rows.iter().map(|r| r[i].chars().count()).max().unwrap_or(0).max(h.chars().count())
+                self.rows
+                    .iter()
+                    .map(|r| r[i].chars().count())
+                    .max()
+                    .unwrap_or(0)
+                    .max(h.chars().count())
             })
             .collect();
 
@@ -155,12 +155,8 @@ impl Table {
             })
             .collect();
 
-        let header: Vec<String> = self
-            .headers
-            .iter()
-            .enumerate()
-            .map(|(i, h)| pad(h, widths[i], numeric[i]))
-            .collect();
+        let header: Vec<String> =
+            self.headers.iter().enumerate().map(|(i, h)| pad(h, widths[i], numeric[i])).collect();
         println!("  {}{}{}", c(BOLD), header.join("  ").trim_end(), c(RESET));
 
         for row in &self.rows {

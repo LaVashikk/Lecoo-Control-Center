@@ -1,7 +1,10 @@
 use super::EcDevice;
 use crate::ec::{REG_CHIP_ID1, REG_CHIP_ID2, REG_CHIP_VER};
 use anyhow::{Context, Result};
-use lecoo_types::{caps::SensorRole, ec_types::{BatteryInfo, FanIndex}};
+use lecoo_types::{
+    caps::SensorRole,
+    ec_types::{BatteryInfo, FanIndex},
+};
 
 pub fn read_system_info(ec: &EcDevice) -> Result<(u8, u8, u8)> {
     ec.with_batch(|b| {

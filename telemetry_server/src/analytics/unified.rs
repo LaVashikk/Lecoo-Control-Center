@@ -26,7 +26,7 @@ use super::sql;
 pub struct Scope {
     pub client: Option<String>,
     /// None means every kind.
-    pub kinds: Option<&'static [&'static str]>,
+    pub kinds:  Option<&'static [&'static str]>,
 }
 
 impl Scope {
@@ -217,7 +217,7 @@ fn archive_insert(table: &str, kind: &str, scope: &Scope) -> String {
 
 pub struct Sources {
     pub archive: Vec<&'static str>,
-    pub rows: i64,
+    pub rows:    i64,
     pub clients: i64,
 }
 

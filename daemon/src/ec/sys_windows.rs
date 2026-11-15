@@ -21,11 +21,11 @@ const ERROR_SERVICE_DOES_NOT_EXIST: i32 = 1060;
 const ERROR_SERVICE_ALREADY_RUNNING: i32 = 1056;
 
 pub struct RawPortIo {
-    _lib: Library,
+    _lib:    Library,
     #[allow(unused)]
     is_open: IsDriverOpenFn,
-    out32: Out32Fn,
-    inp32: Inp32Fn,
+    out32:   Out32Fn,
+    inp32:   Inp32Fn,
 }
 
 impl RawPortIo {

@@ -104,7 +104,13 @@ fn main() -> Result<()> {
                 if let Some(s) = last {
                     print!(
                         "\r{}      ",
-                        t!("msg_monitoring_loop", cpu = s.cpu_c, sys = s.sys_c, cpu_f = s.cpu_fan_rpm, gpu_f = s.gpu_fan_rpm)
+                        t!(
+                            "msg_monitoring_loop",
+                            cpu = s.cpu_c,
+                            sys = s.sys_c,
+                            cpu_f = s.cpu_fan_rpm,
+                            gpu_f = s.gpu_fan_rpm
+                        )
                     );
                     io::stdout().flush().unwrap();
                 }

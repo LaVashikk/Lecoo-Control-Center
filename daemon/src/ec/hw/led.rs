@@ -42,7 +42,12 @@ pub fn apply_led_mode(ec: &EcDevice, mode: &PowerLedMode) -> Result<()> {
 
 /// Plays `effect` for `duration`, then puts `restore` back.
 /// Skips the restore if the LED was changed meanwhile (new mode, sleep, another flash). Returns right away
-pub fn flash_led(ec: &'static EcDevice, effect: BreathConfig, duration: Duration, restore: PowerLedMode) -> Result<()> {
+pub fn flash_led(
+    ec: &'static EcDevice,
+    effect: BreathConfig,
+    duration: Duration,
+    restore: PowerLedMode,
+) -> Result<()> {
     // no breath engine, so at least a visible full-brightness blink
     let mode = match ec.profile.led {
         LedOps::Pwm { .. } => PowerLedMode::Custom(0xFF),

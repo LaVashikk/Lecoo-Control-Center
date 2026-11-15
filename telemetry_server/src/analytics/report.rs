@@ -78,14 +78,8 @@ fn overview(conn: &Connection, sources: &Sources) -> Result {
     let mut facts = Facts::new();
     facts.add("events", sources.rows);
     facts.add("clients", sources.clients);
-    facts.add(
-        "span",
-        format!(
-            "{} .. {}",
-            span.0.as_deref().unwrap_or("-"),
-            span.1.as_deref().unwrap_or("-")
-        ),
-    );
+    facts
+        .add("span", format!("{} .. {}", span.0.as_deref().unwrap_or("-"), span.1.as_deref().unwrap_or("-")));
     facts.print();
 
     Table::query(
@@ -434,21 +428,14 @@ fn health(conn: &Connection, sources: &Sources) -> Result {
 
     // The pre-0.6 server mirrored every event into raw_telemetry, so only rows
     // without a parsed sibling are actual decode failures.
-    let siblings: Vec<String> = sources
-        .archive
-        .iter()
-        .map(|t| format!("SELECT raw_id FROM {t}"))
-        .collect();
+    let siblings: Vec<String> = sources.archive.iter().map(|t| format!("SELECT raw_id FROM {t}")).collect();
 
     let dead: i64 = if siblings.is_empty() {
         scalar(conn, "SELECT COUNT(*) FROM raw_telemetry").unwrap_or(0)
     } else {
         scalar(
             conn,
-            &format!(
-                "SELECT COUNT(*) FROM raw_telemetry WHERE id NOT IN ({})",
-                siblings.join(" UNION ALL ")
-            ),
+            &format!("SELECT COUNT(*) FROM raw_telemetry WHERE id NOT IN ({})", siblings.join(" UNION ALL ")),
         )
         .unwrap_or(0)
     };

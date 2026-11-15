@@ -3,17 +3,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BatteryInfo {
     /// Firmware constant on N155A (5200), not the pack's real design capacity!!
-    pub design_mah: u16,
-    pub design_mv: u16,
+    pub design_mah:    u16,
+    pub design_mv:     u16,
     /// Learned by the gauge, drops as the cells wear
-    pub full_mah: u16,
+    pub full_mah:      u16,
     pub remaining_mah: u16,
-    pub voltage_mv: u16,
-    pub cycles: u16,
+    pub voltage_mv:    u16,
+    pub cycles:        u16,
     /// Negative while discharging
-    pub current_ma: i32,
+    pub current_ma:    i32,
     /// Cells in series, from the board profile
-    pub cells: u8,
+    pub cells:         u8,
 }
 
 impl BatteryInfo {

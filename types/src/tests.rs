@@ -39,17 +39,17 @@ fn ec_types_roundtrip() {
 fn telemetry_roundtrip() {
     roundtrip(TelemetryData::Unsupported { host: HostInfo::default(), chip: None });
     roundtrip(TelemetryData::ErrorLog {
-        level: "ERROR".into(),
+        level:   "ERROR".into(),
         message: "ec write failed".into(),
-        module: "lecoo_ec_daemon::ec".into(),
-        line: 42,
-        count: 4,
+        module:  "lecoo_ec_daemon::ec".into(),
+        line:    42,
+        count:   4,
     });
     roundtrip(TelemetryData::Panic {
         message: "unwrap on None".into(),
-        file: "src/main.rs".into(),
-        line: 7,
-        thread: Some("telemetry-worker".into()),
+        file:    "src/main.rs".into(),
+        line:    7,
+        thread:  Some("telemetry-worker".into()),
     });
 }
 
@@ -58,14 +58,14 @@ fn telemetry_roundtrip() {
 #[test]
 fn payload_shape_matches_server_columns() {
     let payload = TelemetryPayload {
-        id: 0xDEAD_BEEF,
+        id:      0xDEAD_BEEF,
         session: 1,
-        data: TelemetryData::ErrorLog {
-            level: "WARN".into(),
+        data:    TelemetryData::ErrorLog {
+            level:   "WARN".into(),
             message: "boom".into(),
-            module: "m".into(),
-            line: 1,
-            count: 1,
+            module:  "m".into(),
+            line:    1,
+            count:   1,
         },
     };
 
@@ -152,35 +152,35 @@ fn battery_eta() {
 #[ignore]
 fn sample_payload() {
     let payload = TelemetryPayload {
-        id: 0x0123_4567_89AB_CDEF,
+        id:      0x0123_4567_89AB_CDEF,
         session: 0xFEED_FACE,
-        data: TelemetryData::Startup {
-            host: HostInfo {
-                vendor: "Lecoo".into(),
-                product: "Ling Jiu 16p".into(),
+        data:    TelemetryData::Startup {
+            host:           HostInfo {
+                vendor:      "Lecoo".into(),
+                product:     "Ling Jiu 16p".into(),
                 motherboard: "N155".into(),
-                bios: Some("1.09 (03/14/2025)".into()),
-                cpu: "Intel(R) Core(TM) i5-12450H".into(),
-                os: "Arch Linux".into(),
-                arch: "x86_64".into(),
+                bios:        Some("1.09 (03/14/2025)".into()),
+                cpu:         "Intel(R) Core(TM) i5-12450H".into(),
+                os:          "Arch Linux".into(),
+                arch:        "x86_64".into(),
             },
-            profile: "n155".into(),
+            profile:        "n155".into(),
             forced_profile: false,
-            firmware: "IT5570-A1".into(),
-            hram_offset: 0x0800,
-            caps: Box::new(Capabilities {
-                board: "n155".into(),
+            firmware:       "IT5570-A1".into(),
+            hram_offset:    0x0800,
+            caps:           Box::new(Capabilities {
+                board:          "n155".into(),
                 daemon_version: "0.5.2-beta".into(),
-                fans: vec![FanCaps { index: FanIndex::Cpu, duty_max: 100 }],
-                sensors: vec![SensorRole::Cpu, SensorRole::Sys],
+                fans:           vec![FanCaps { index: FanIndex::Cpu, duty_max: 100 }],
+                sensors:        vec![SensorRole::Cpu, SensorRole::Sys],
                 power_profiles: vec![PowerProfile::Silent, PowerProfile::Default],
-                kbd: KbdCaps { on_off: true, levels: true, custom: true },
-                led: LedCaps { on_off: true, brightness: true, animation: true },
-                battery_leds: true,
-                battery_info: true,
-                charge: ChargeCaps::default(),
+                kbd:            KbdCaps { on_off: true, levels: true, custom: true },
+                led:            LedCaps { on_off: true, brightness: true, animation: true },
+                battery_leds:   true,
+                battery_info:   true,
+                charge:         ChargeCaps::default(),
             }),
-            restore_error: None,
+            restore_error:  None,
         },
     };
 
