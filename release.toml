@@ -1,28 +1,30 @@
 [release]
 notes_header = """
-## 🚀 Lecoo Control Center
+A reverse-engineered EC daemon and CLI for Lecoo laptops on Emdoor boards: fans, power profiles, charge limits, keyboard backlight and the LED ring.
 
-A low-level Embedded Controller (EC) daemon and CLI for fan control, power limits (TDP), charge limits (FlexiCharger), and lighting management for Lecoo Pro 14.
+## Supported boards
 
-### ⚠️ Important Disclaimer
-This software interacts directly with your system's hardware. **Use at your own risk!** Incorrect configurations (e.g., setting custom fan curves to 0 RPM under heavy load) can result in overheating and irreversible hardware damage.
+| Board | Laptop | Status |
+|---|---|---|
+| N155A | Lecoo Pro 14 (AMD) | Full support |
+| N155C | Lecoo Pro 14 (Intel i5-13420H) | Same as N155A, not confirmed on hardware |
+| N155D | Lecoo Pro 14 (Intel Core Ultra 5) | No LED ring or battery info yet |
+| N161A | Lecoo Air 16 | Charge control, battery info, keyboard backlight |
 
-### 🛠️ How to Install
+Your board: `cat /sys/class/dmi/id/board_name` on Linux, `(Get-CimInstance Win32_BaseBoard).Product` in PowerShell.
 
-**Windows:**
-1. Download the `*-windows.zip` archive below and extract it to a folder.
-2. Right-click on `install.bat` and select **"Run as Administrator"**.
-3. Open a *new* terminal window and type `lecoo-ctrl help`.
+## Install or update
 
-**Linux:**
-1. Download the `*-linux.tar.gz` archive and extract it.
-2. Open a terminal in the extracted folder and run: `sudo ./install.sh`.
-3. Use the `lecoo-ctrl` command to manage the daemon.
+- **Windows:** extract the zip, run `install.bat` as administrator, then `lecoo-ctrl help` in a new terminal.
+- **Linux:** extract the tar.gz, run `sudo ./install.sh`, then `lecoo-ctrl help`.
 
-### 📖 Useful Links
-* 🇬🇧 [English README](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README.md) | 🇷🇺 [Russian README](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README_RU.md)
-* 🐛 [Report a Bug or Request a Feature](https://github.com/LaVashikk/Lecoo-Control-Center/issues)
-* ☕ [Support the Development](https://pay.cloudtips.ru/p/7e960f26)
+The installer replaces an older version, no need to uninstall first.
+
+## Use at your own risk
+
+This software writes directly to EC registers. A low `fan custom` duty under load can overheat the laptop, and `fan turbo` wears the fans out if left on.
+
+[README](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README.md) · [Русский](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README_RU.md) · [中文](https://github.com/LaVashikk/Lecoo-Control-Center/blob/main/README_CN.md) · [Issues](https://github.com/LaVashikk/Lecoo-Control-Center/issues) · [Support the development](https://pay.cloudtips.ru/p/7e960f26)
 """
 
 [[bundles]]

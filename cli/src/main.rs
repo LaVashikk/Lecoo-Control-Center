@@ -272,10 +272,18 @@ fn print_overheat_status(client: &mut IpcClient) -> Result<()> {
     Ok(())
 }
 
+// --dump-profile only reads, so it's fine on any board
+// No --profile = the daemon serves Unsupported forever and never gets to the dump
+// N155A is just the reference map, the raw addresses and values are what we need
+#[cfg(windows)]
+const DUMP_CMD: &str = "lecoo-ec-daemon.exe --profile N155A --dump-profile";
+#[cfg(not(windows))]
+const DUMP_CMD: &str = "sudo lecoo-ec-daemon --profile N155A --dump-profile";
+
 pub(crate) fn exit_with_error(err: ipc::IpcError) -> ! {
     if let Some(info) = err.unsupported {
         println!("{}", t!("msg_unsupported_title", board = info.board));
-        println!("{}", t!("msg_unsupported_hint"));
+        println!("{}", t!("msg_unsupported_hint", cmd = DUMP_CMD));
     } else if err.code == ipc::ErrorCode::Precondition {
         println!("{}", t!("msg_precondition", reason = err.message));
     } else {

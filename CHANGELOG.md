@@ -1,5 +1,60 @@
 # Changelog
 
+## [0.6.0] - 2026-11-14
+
+First stable release since 0.4.1. The 0.5.x versions were refactoring betas and are not listed separately: everything below is relative to 0.4.1. Regressions that only ever existed in the betas are listed in their own section.
+
+### Added
+- **Board profiles.** Each supported board (N155A, N155C, N155D, N161A) has its own register map and feature set. The daemon reports these capabilities to the CLI, which adapts its help and arguments. Features a board does not have are rejected with a clear message instead of writing to registers that mean something else there.
+- **N161A battery charge control**, based on @YuchuLiao's reverse engineering: `charge lifespan` arms the firmware's own battery protection (keeps the battery at about 61-76%), `charge hold` stops charging at the current level (works between 62% and 84%).
+- `battery`: charging state, power draw, time left or time until the charge limit, voltage per cell, remaining and full capacity (mAh and Wh), health, cycle count and the active charge limit. Available on N155A, N155C and N161A.
+- `charge` reworked:
+  - Without arguments it shows the requested mode, what the EC is actually doing, the battery level and why a request is still pending.
+  - Custom ranges with `charge --min <N> --max <N>` on N155 boards (20-100%).
+  - Presets are now per board: `full`, `high`, `balanced`, `lifespan`, `desk` on N155 boards; `full`, `lifespan`, `hold` on N161A.
+  - A mode that cannot be applied right now (N161A preconditions) is remembered and applied automatically once possible: on AC connect, after wake, or within a minute.
+- LED ring:
+  - `led breath <preset>`: hardware breathing animations with 11 presets (smooth, sleep, alert, zen, ping, energetic, warning, vacuum, panic, sonar, toxic).
+  - `led sleep <auto|custom N|breath preset>`: what the ring shows while the laptop sleeps (default: the `sleep` animation).
+  - `led flash [preset] [--for <seconds>]`: plays an effect once, then returns to the saved mode. Meant for scripts and notifications. Boards without the breathing engine blink at full brightness instead.
+- `daemon overheat [on|off|<°C>]`: flashes the LED ring while the CPU is above the threshold (`on` = 95 °C, the alarm turns off 5 °C below it). Without an argument it shows the current setting.
+- `fan <target> turbo`: maximum fan duty (220), with a warning about fan wear.
+- `hwtest`: interactive hardware test. Cycles the keyboard backlight, fans and LED ring and asks what you observed, verifies power profiles by reading them back, then restores your settings (also on Ctrl+C).
+- Daemon-side metrics: the daemon samples temperatures and fan speeds itself. `monitoring` reads these samples, and the daemon speeds up to the rate a client asks for (down to 1 s) while someone is watching, then drops back to once a minute.
+- Daemon flags `--profile <id>` and `--dump-profile` (prints the resolved profile, register addresses and live values; read-only).
+- CLI: a "Hardware Capabilities" section in `help` with the board's charge presets and power profiles, "did you mean" suggestions for mistyped commands, case-insensitive arguments, `perf` as an alias for `performance`.
+- Hidden developer commands for reverse engineering: `read <addr> [count]` dumps raw EC bytes, `write <addr> <val>` is only honored by daemons built with the `unsafe_write_using_ipc` feature.
+
+### Changed
+- Boards that are not on the supported list are no longer driven with the N155A register map. A profile can be forced with `--profile <id>`, and `--insecure` on such a board needs it too.
+- `fan <target> full` now runs the fans at duty 165 instead of 150.
+- Restoring settings on startup and wake now goes feature by feature: one failing feature no longer stops the others from being restored, and features the board does not have are skipped.
+- The charge mode is owned by the daemon and is no longer overwritten at sleep or shutdown by whatever the EC reports. Keyboard backlight and power profile are still read back, since hotkeys can change them.
+- The state file is written atomically (temp file + rename), so a crash during a save no longer leaves a broken config behind.
+- Linux: the daemon logs to the terminal when it is not started by systemd (handy for manual runs and `--dump-profile`).
+- Windows: the daemon starts the `inpoutx64` driver service itself if it is stopped (#19, thanks @C0ntrolDev).
+- Telemetry (still optional: `lecoo-ctrl daemon telemetry disable`) uses a new JSON format and endpoint. In addition to what 0.4.x sent, it includes the resolved board profile and feature set, host vendor and product, BIOS version, CPU architecture, the applied settings, battery level and daemon uptime in periodic status reports, daemon warnings and errors (rate-limited), a per-run session id, and the board name and EC chip on unsupported boards. Events that fail to send are kept (up to 32) and retried.
+
+### Fixed
+- N161A: the daemon no longer writes N155A fan, LED ring and battery indicator registers. They had no effect or hit unrelated hardware: the N155A orange-LED bit is the keyboard backlight pin on N161A.
+- Battery indicator: plugging in the charger in `full` mode lit the white "charged" LED at any battery level.
+
+### Fixed in the 0.5.x betas
+- 0.5.0-beta wrote N155 fan duty to the wrong RAM addresses.
+- On unsupported boards a daemon thread panicked every time a client disconnected.
+- The saved charge mode was overwritten at sleep and shutdown by the decoded EC state. On N155A this could save `Freeze`, which the board does not support, and restoring the charge mode then failed on every boot.
+- N161A `lifespan` never armed ("Cannot confirm active charging").
+- A client with a mismatched IPC protocol got a dropped connection ("failed to fill whole buffer") instead of a version mismatch message.
+- Fatal EC initialization errors were not logged.
+
+### Refactored
+- New `lecoo-types` crate with the types shared by the daemon, the CLI and the upcoming GUI.
+- IPC and the daemon state file use JSON instead of bincode. IPC messages are length-prefixed JSON frames with typed connections for both sides, structured errors (`Internal`, `UnsupportedRequest`, `UnsupportedHardware`, `Precondition`). Unknown fields are ignored on both sides.
+- `EcOffsets` replaced by board profiles with typed addresses (`Reg`, `Ram`, `Banked`) and per-feature backends (`KbdOps`, `LedOps`, `ChargeOps`). Capabilities are derived from them.
+- CLI: clap replaced with a small `lexopt` parser, so help and arguments can follow the board's capabilities. The Chinese locale file is renamed to `zh-CN.yml`.
+- Unit tests for board profiles (ID and DMI shadowing, address collisions, capability derivation) and for the JSON wire format.
+- Added `rustfmt.toml`, code formatted.
+
 ## [0.4.1] - 2026-07-15
 
 ### Added

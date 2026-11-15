@@ -275,6 +275,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          name: "Release ${{ github.ref_name }}"
+          name: "Lecoo Control Center ${{ github.ref_name }}"
           body_path: releasenotes.md
           prerelease: ${{ contains(github.ref_name, '-') }}

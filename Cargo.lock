@@ -706,7 +706,7 @@ dependencies = [
 
 [[package]]
 name = "gui"
-version = "0.5.2-beta"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "ipc",
@@ -858,7 +858,7 @@ dependencies = [
 
 [[package]]
 name = "ipc"
-version = "0.5.2-beta"
+version = "0.6.0"
 dependencies = [
  "interprocess",
  "lecoo-types",
@@ -912,7 +912,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "lecoo-ctrl"
-version = "0.5.2-beta"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "ctrlc",
@@ -926,7 +926,7 @@ dependencies = [
 
 [[package]]
 name = "lecoo-ec-daemon"
-version = "0.5.2-beta"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "file-rotate",
@@ -945,7 +945,7 @@ dependencies = [
 
 [[package]]
 name = "lecoo-types"
-version = "0.5.2-beta"
+version = "0.6.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -1560,7 +1560,7 @@ dependencies = [
 
 [[package]]
 name = "telemetry_server"
-version = "0.5.2-beta"
+version = "0.6.0"
 dependencies = [
  "bincode",
  "clap",

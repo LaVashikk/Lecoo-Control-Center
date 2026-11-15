@@ -157,4 +157,4 @@ err_led_no_animation: "на этой плате нет аппаратной ан
 warn_fan_turbo: "⚠️ ВНИМАНИЕ: Режим Turbo запускает кулеры на экстремальных оборотах (~6500 RPM).\nДолгая работа приведет к быстрому износу вентиляторов. Используйте с осторожностью!"
 msg_precondition: "⚠️ Ограничение: %{reason}"
 msg_unsupported_title: "⚠️ Неподдерживаемая плата: %{board}"
-msg_unsupported_hint: "Ваша плата не поддерживается. Чтобы помочь с добавлением поддержки, запустите: lecoo-ctrl selftest --insecure --profile <ближайшая плата>"
+msg_unsupported_hint: "Чтобы помочь с поддержкой, создайте issue на https://github.com/LaVashikk/Lecoo-Control-Center/issues\nи приложите вывод этой команды (она только читает EC, запускать от администратора):\n  %{cmd}"

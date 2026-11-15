@@ -159,6 +159,6 @@ err_led_no_animation: "this board has no hardware LED animation"
 warn_fan_turbo: "⚠️ WARNING: Turbo mode operates fans at extreme speeds (~6500 RPM).\nProlonged use will lead to rapid fan wear and degradation. Use with caution!"
 msg_precondition: "⚠️ Precondition: %{reason}"
 msg_unsupported_title: "⚠️ Unsupported Board: %{board}"
-msg_unsupported_hint: "Board is not supported. To help add support, run: lecoo-ctrl selftest --insecure --profile <closest board>"
+msg_unsupported_hint: "To help add support, open an issue at https://github.com/LaVashikk/Lecoo-Control-Center/issues\nand attach the output of this command (it only reads the EC, run it as admin):\n  %{cmd}"
 
 # Responses
