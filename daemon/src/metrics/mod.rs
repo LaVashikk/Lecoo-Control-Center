@@ -97,6 +97,19 @@ fn run() {
             }
             Err(e) => log::debug!("Metrics tick skipped: {e}"),
         }
+        retry_pending_charge(ec);
+    }
+}
+
+/// TODO: FREAKING WORKAROUND!!
+// Charge preconditions come and go without any event: AC fires before the charger ramps up,
+/// and charging up into the N161A hold window fires nothing at all. So we here do some shit
+fn retry_pending_charge(ec: &EcDevice) {
+    let Ok(desired) = crate::handlers::get_state().map(|s| s.charge) else {
+        return;
+    };
+    if let Err(e) = ec::reconcile(ec, &desired) {
+        log::debug!("Charge reconcile skipped: {e}");
     }
 }
 
@@ -108,6 +121,6 @@ fn sample(ec: &EcDevice) -> Result<Sample> {
         sys_c,
         cpu_fan_rpm,
         gpu_fan_rpm,
-        uptime_s: crate::telemetry::uptime_s()
+        uptime_s: crate::telemetry::uptime_s(),
     })
 }

@@ -46,8 +46,22 @@ pub fn effective_charge(ec: &EcDevice) -> Result<(ChargeIntent, Option<(u8, u8)>
     match ec.profile.charge {
         ChargeOps::None => Ok((ChargeIntent::Full, None)),
         ChargeOps::FlexiCharger { min, max, full_max, .. } => flexi::effective(ec, min, max, full_max),
-        ChargeOps::PolicyByte { reg, fw_thresholds, .. } => policy_byte::effective(ec, reg, fw_thresholds),
+        ChargeOps::PolicyByte { reg, fw_thresholds, .. } => policy_byte::effective(ec, reg, fw_thresholds), // TODO: from memory prob
     }
+}
+
+/// `effective_charge` named the way the user asked for it, so it can be compared with `desired`.
+/// PolicyByte fw sets the latch bit itself once `lifespan` tops out, and then 0x07 means both "hold" and "lifespan, paused"
+pub fn effective_for(ec: &EcDevice, desired: &ChargeIntent) -> Result<(ChargeIntent, Option<(u8, u8)>)> {
+    let raw = effective_charge(ec)?;
+    Ok(match (ec.profile.charge, raw.0, desired) {
+        // lifespan at its top, the fw latched it. For the fw a hold IS this same state anyway
+        (ChargeOps::PolicyByte { fw_thresholds, .. }, ChargeIntent::Freeze, ChargeIntent::Preserve(None)) => {
+            (ChargeIntent::Preserve(None), Some(fw_thresholds))
+        }
+        // NOT mirrored: hold whose latch fw dropped below 61% really stopped holding, reconcile re-applies it in 62..84
+        _ => raw,
+    })
 }
 
 fn unsupported_reason(ec: &EcDevice, intent: &ChargeIntent) -> String {
@@ -98,18 +112,24 @@ pub fn read_charge_limit(ec: &EcDevice) -> Result<(u8, u8)> {
 /// SoC at which charging is expected to stop. Never None, so callers such as
 /// the battery LED handler keep working on every board.
 pub fn charge_stop_level(ec: &EcDevice) -> u8 {
-    read_charge_limit(ec).map(|(_, max)| max).unwrap_or(100)
+    match effective_charge(ec) {
+        Ok((ChargeIntent::Preserve(Some(r)), _)) => r.max,
+        Ok((ChargeIntent::Preserve(None), Some((_, max)))) => max,
+        // holding, the battery is not going anywhere
+        Ok((ChargeIntent::Freeze, _)) => 0,
+        _ => 100,
+    }
 }
 
 fn is_charging(ec: &EcDevice) -> Option<bool> {
-    let bat = ec.profile.battery?;
-    let addr = bat.charge_current?;
-    ec.read(addr).ok().map(|v| v > 0)
+    let addr = ec.profile.battery?.charge_current?;
+    // whole word: a single byte here is the high one, 0 for any trickle under 256 mA
+    ec.read_u16_be(addr).ok().map(|v| v != 0)
 }
 
 /// Idempotent. Call at startup, on AC connect and on wake.
 pub fn reconcile(ec: &EcDevice, desired: &ChargeIntent) -> Result<Option<String>> {
-    let (effective, _) = effective_charge(ec)?;
+    let (effective, _) = effective_for(ec, desired)?;
     if effective == *desired {
         return Ok(None);
     }
@@ -121,7 +141,8 @@ pub fn reconcile(ec: &EcDevice, desired: &ChargeIntent) -> Result<Option<String>
         }
 
         Availability::Blocked(reason) => {
-            log::info!("Charge policy pending: {reason}");
+            // debug: the metrics tick retries this every round
+            log::debug!("Charge policy pending: {reason}");
             Ok(Some(reason))
         }
 

@@ -203,7 +203,7 @@ fn process_daemon_command(ec: &EcDevice, command: &DaemonCommand) -> Result<IpcR
 
 fn get_charge_status(ec: &EcDevice) -> Result<IpcResponse> {
     let desired = get_state()?.charge;
-    let (effective, thresholds) = ec::effective_charge(ec)?;
+    let (effective, thresholds) = ec::effective_for(ec, &desired)?;
 
     let pending = if effective == desired {
         None

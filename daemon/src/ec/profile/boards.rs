@@ -50,6 +50,19 @@ const N155A_PWM: PwmSpec = PwmSpec {
 };
 
 #[rustfmt::skip]
+const N155A_GAUGE: BatteryGaugeSpec = BatteryGaugeSpec {
+    cells:       4,
+    design_cap:  Addr::Ram(0x84),
+    design_volt: Addr::Ram(0x86),
+    full_cap:    Addr::Ram(0x88),
+    status:      Addr::Ram(0x8C),
+    current:     Addr::Ram(0x8D),
+    rem_cap:     Addr::Ram(0x8F),
+    voltage:     Addr::Ram(0x91),
+    cycles:      Addr::Ram(0x95),
+};
+
+#[rustfmt::skip]
 const N155A_PRESETS: &[PresetSpec] = &[
     PresetSpec { name: "full",     intent: ChargeIntent::Full },
     PresetSpec { name: "desk",     intent: ChargeIntent::Preserve(Some(ChargeRange { min: 40, max: 50 })) },
@@ -80,17 +93,7 @@ pub const N155A: BoardProfile = BoardProfile {
         rsoc: Addr::Ram(0x93),
         charge_current: None,
     }),
-    battery_gauge: Some(BatteryGaugeSpec {
-        cells:       4,
-        design_cap:  Addr::Ram(0x84),
-        design_volt: Addr::Ram(0x86),
-        full_cap:    Addr::Ram(0x88),
-        status:      Addr::Ram(0x8C),
-        current:     Addr::Ram(0x8D),
-        rem_cap:     Addr::Ram(0x8F),
-        voltage:     Addr::Ram(0x91),
-        cycles:      Addr::Ram(0x95),
-    }),
+    battery_gauge: Some(N155A_GAUGE),
 
     kbd: KbdOps::Levels {
         reg:            Addr::Banked(0x0F05),
@@ -139,10 +142,32 @@ pub const N155D: BoardProfile = BoardProfile {
     ..N155A
 };
 
+/// Addresses come from the N161A EC firmware dump and YuchuLiao's hardware tests
 pub const N161A: BoardProfile = BoardProfile {
     id: "N161A",
     dmi: &["N161A"],
+    // todo: fan loop isn't in the dump at all, nothing touches the N155A duty/policy/rpm cells
+    // 0x7A is the cycle counter here, so the inherited Gpu rpm was half garbage anyway
+    fans: &[],
+    battery: Some(BatterySpec {
+        rsoc: Addr::Ram(0x93),
+        // fw writes 0x03E8 / 0x09C4 here (1000 / 2500 mA) and zeroes it when charging stops
+        charge_current: Some(Addr::Reg(0x05D4)),
+    }),
+    // Same block as N155A, only cycles moved. design_cap is the pack's real one here, not 5200
+    battery_gauge: Some(BatteryGaugeSpec {
+        // fw caps charge voltage at 13048 mV = 4.35 V * 3, so 3S prob
+        cells: 3,
+        cycles: Addr::Ram(0x7A),
+        ..N155A_GAUGE
+    }),
+    // fw drives its own charge LEDs on GPH4/GPJ4
+    // N155A orange mask is GPA1 = the keyboard backlight pin on this board!!
+    battery_leds: None,
     kbd: KbdOps::PwmDuty { reg: Addr::Banked(0x1803) },
+    // todo todo: same PWM0 breath LED as N155A, but fw never reads Ram(0x55) and keeps poking 0x1610/0x1850
+    // its own stand-off flag looks like bit1 of Ram(0x10), set by a mailbox cmd. needs a test on hw
+    led: LedOps::None,
     charge: ChargeOps::PolicyByte {
         reg: Addr::Reg(0x0414),
         fw_thresholds: (61, 76),
@@ -150,8 +175,6 @@ pub const N161A: BoardProfile = BoardProfile {
         freeze_soc: (62, 84),
     },
     charge_presets: N161A_PRESETS,
-    // TODO: rn I have no idea, will that works or not
-    battery_gauge: None,
     ..N155A
 };
 

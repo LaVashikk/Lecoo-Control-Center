@@ -15,8 +15,8 @@ pub use server::IpcServer;
 pub const IPC_PROTOCOL_MAJOR: u8 = 1;
 pub const HANDSHAKE_LEN: usize = 5;
 pub const MAGIC_REQ: &[u8; 3] = b"LCC";
-pub const MAGIC_OK: &[u8; 3] = b"OKK";
-pub const MAGIC_ERR: &[u8; 3] = b"ERR";
+// pub const MAGIC_OK: &[u8; 3] = b"OKK";  // todo: unused
+// pub const MAGIC_ERR: &[u8; 3] = b"ERR"; // todo: unused
 
 // TODO: TOO BIG FILE! Maybe refactor it
 
@@ -242,6 +242,7 @@ where
         }
 
         if req[3] != IPC_PROTOCOL_MAJOR {
+            let _ = self.stream.write_all(&[b'E', b'R', b'R']); // TODO !!!!
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!("IPC protocol v{} != v{}", req[3], IPC_PROTOCOL_MAJOR),
@@ -257,15 +258,4 @@ where
 
 fn get_socket_name() -> io::Result<interprocess::local_socket::Name<'static>> {
     "lecoo_ctl_daemon".to_ns_name::<GenericNamespaced>().map(|n| n.into_owned())
-}
-
-const fn parse_u8(s: &str) -> u8 {
-    let mut res: u8 = 0;
-    let bytes = s.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        res = res * 10 + (bytes[i] - b'0');
-        i += 1;
-    }
-    res
 }

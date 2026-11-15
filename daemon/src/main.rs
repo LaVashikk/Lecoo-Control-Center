@@ -65,7 +65,8 @@ fn process_ipc_connection(mut conn: DaemonWorker) {
                         log::error!("IPC recv error: {}", err);
                     } else {
                         // Save state on connection reset
-                        if let Ok(state) = STATE.get().unwrap().try_lock() {
+
+                        if let Some(state) = STATE.get().and_then(|m| m.lock().ok()) {
                             let _ = state.save();
                         } else {
                             log::warn!("Could not acquire lock to save state on connection reset");
@@ -80,13 +81,12 @@ fn process_ipc_connection(mut conn: DaemonWorker) {
 
 /// Process system/service events
 fn process_service(rx_in_core: std::sync::mpsc::Receiver<services::InternalEvent>) {
-    let ec = EC.get().unwrap();
+    let ec = EC.get().expect("impossible crash");
 
     let read_and_save_state = |ec: &ec::EcDevice| {
         if let Ok(mut state) = handlers::get_state() {
             let _ = ec::read_keyboard_backlight(ec).map(|kbd| state.keyboard_backlight = kbd);
             let _ = ec::read_power_profile(ec).map(|profile| state.power_profile = profile);
-            let _ = ec::effective_charge(ec).map(|(intent, _)| state.charge = intent);
             let _ = state.save();
         } else {
             log::error!("Incomplete state save on event");
@@ -123,6 +123,7 @@ fn process_service(rx_in_core: std::sync::mpsc::Receiver<services::InternalEvent
                 }
                 if let Ok(current) = ec::read_battery_rsoc(ec) {
                     let stop = ec::charge_stop_level(ec);
+                    // todo: prob move to 'metrics' for better updates
                     let _ = ec::apply_battery_leds(ec, current < stop, current >= stop);
                 }
             }
