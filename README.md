@@ -133,6 +133,7 @@ Developers of third-party GUIs are welcome to submit a Pull Request to list thei
 
 | Project | Author | Platform | Tech Stack | Notes |
 | :--- | :--- | :--- | :--- | :--- |
+| [Lecoo Panel](https://github.com/Kip-21/Lecoo-Panel) | [Kip-21](https://github.com/Kip-21) | Windows | C# / WinForms | Preview for `lecoo-ctrl` v0.6.0 (N155A). |
 | *[Submit your GUI](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | Open a PR to add your GUI frontend. Because im lazy do it myself ;p |
 
 ## Telemetry & Data Collection
