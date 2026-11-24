@@ -133,6 +133,7 @@ CN [中文 Readme 在这](README_RU.md)
 
 | 项目 | 作者 | 平台 | 技术栈 | 特性 / 备注 |
 | :--- | :--- | :--- | :--- | :--- |
+| [Lecoo Control Panel QML](https://github.com/Yorukazeh/Lecoo-Control-Panel-QML) | [Yorukazeh](https://github.com/Yorukazeh) | Windows / Linux | Rust / Qt 6 / QML | 基于QML构建的界面，易于使用 |
 | *[添加你的项目](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | 提交 PR 添加您的 GUI 前端 |
 
 ## 遥测与数据收集
