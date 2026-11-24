@@ -133,6 +133,7 @@ Developers of third-party GUIs are welcome to submit a Pull Request to list thei
 
 | Project | Author | Platform | Tech Stack | Notes |
 | :--- | :--- | :--- | :--- | :--- |
+| [Lecoo Control Panel QML](https://github.com/Yorukazeh/Lecoo-Control-Panel-QML) | [Yorukazeh](https://github.com/Yorukazeh) | Windows / Linux | Rust / Qt 6 / QML | An easy-to-use interface built with QML. |
 | [Lecoo Panel](https://github.com/Kip-21/Lecoo-Panel) | [Kip-21](https://github.com/Kip-21) | Windows | C# / WinForms | Preview for `lecoo-ctrl` v0.6.0 (N155A). |
 | *[Submit your GUI](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | Open a PR to add your GUI frontend. Because im lazy do it myself ;p |
 

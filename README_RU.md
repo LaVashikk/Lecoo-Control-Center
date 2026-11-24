@@ -130,6 +130,7 @@ Lecoo Control Center - это созданный методом обратной
 
 | Проект | Автор | Платформа | Стек технологий | Особенности / Примечания |
 | :--- | :--- | :--- | :--- | :--- |
+| [Lecoo Control Panel QML](https://github.com/Yorukazeh/Lecoo-Control-Panel-QML) | [Yorukazeh](https://github.com/Yorukazeh) | Windows / Linux | Rust / Qt 6 / QML | Удобный интерфейс, созданный на QML. |
 | *[Добавьте свой проект](https://github.com/LaVashikk/Lecoo-Control-Center/pulls)* | - | Windows / Linux | - | Откройте PR, чтобы добавить свой GUI |
 
 ## Телеметрия и сбор данных
